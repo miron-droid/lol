@@ -18,6 +18,10 @@ describe('DashboardController', () => {
       netProfitAmount: 6612.5,
     },
     weeks: [],
+    statusBreakdown: [{ status: 'completed', count: 5 }],
+    averages: { avgGross: 4600, avgProfit: 1380, avgMiles: 800, avgProfitMargin: 30 },
+    topCorridors: [],
+    flags: { quickPay: 1, directPayment: 0, factoring: 2, driverPaid: 3 },
   };
 
   beforeEach(async () => {

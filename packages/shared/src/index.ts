@@ -34,7 +34,7 @@ export type { FinanceBreakdown } from './load/load.utils';
 export type { LoadDto, CreateLoadRequest, UpdateLoadRequest } from './load/load.types';
 
 /** Dashboard */
-export type { DashboardDto, WeeklyAggregation } from './dashboard/dashboard.types';
+export type { DashboardDto, WeeklyAggregation, StatusBreakdown, DashboardAverages, TopCorridor, FlagSummary } from './dashboard/dashboard.types';
 
 /** Statements */
 export type {
