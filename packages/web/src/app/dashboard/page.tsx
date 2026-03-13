@@ -7,108 +7,70 @@ import { useAuth } from '@/lib/auth';
 import { apiFetch } from '@/lib/api';
 import {
   ProfitStatsChart,
-  ProfitMarginChart,
-  StatusDonutChart,
+  StatusStatsCards,
   TopCorridorsCard,
   FlagSummaryCard,
   Sparkline,
 } from './DashboardCharts';
 import { PageShell } from '@/components/PageShell';
 import { ErrorBanner, LoadingBox, EmptyBox } from '@/components/StateBoxes';
-import { fmt, tabBtnStyle, cardStyle, colors, fontSizes, fontFamily, spacing, transition, radii, shadows } from '@/lib/styles';
+import { fmt, tabBtnStyle, cardStyle, colors, fontSizes, fontFamily, spacing, transition, radii } from '@/lib/styles';
 
-// ── Trend arrow + percentage ────────────────────────────────────
-function TrendIndicator({ current, previous }: { current: number; previous: number }) {
-  if (previous === 0 && current === 0) return null;
-  const delta = previous !== 0 ? ((current - previous) / Math.abs(previous)) * 100 : 100;
-  const isUp = delta > 0;
-  const isZero = Math.abs(delta) < 0.5;
+/* ──────────── HR Portal-style KPI card with left accent ──────── */
 
-  if (isZero) return <span style={{ fontSize: fontSizes.xs, color: colors.textMuted }}>—</span>;
-
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 2,
-        fontSize: fontSizes.xs,
-        fontWeight: 600,
-        color: isUp ? colors.success : colors.danger,
-      }}
-    >
-      <svg width={10} height={10} viewBox="0 0 10 10">
-        {isUp ? (
-          <polygon points="5,1 9,7 1,7" fill="currentColor" />
-        ) : (
-          <polygon points="5,9 9,3 1,3" fill="currentColor" />
-        )}
-      </svg>
-      {Math.abs(delta).toFixed(0)}%
-    </span>
-  );
-}
-
-// ── Enhanced KPI card ───────────────────────────────────────────
 function KpiCard({
   label,
   value,
-  color,
+  accentColor,
+  icon,
   sparkData,
   sparkColor,
-  trend,
 }: {
   label: string;
   value: string;
-  color?: string;
+  accentColor: string;
+  icon?: React.ReactNode;
   sparkData?: number[];
   sparkColor?: string;
-  trend?: { current: number; previous: number };
 }) {
   return (
     <div
       style={{
         ...cardStyle,
-        flex: '1 1 160px',
-        minWidth: 140,
+        borderLeft: `4px solid ${accentColor}`,
         display: 'flex',
-        flexDirection: 'column',
-        gap: 6,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        minWidth: 0,
       }}
     >
-      <div
-        style={{
-          fontSize: fontSizes.xs,
-          color: colors.textMuted,
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: '0.04em',
-        }}
-      >
-        {label}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: fontSizes.sm, color: colors.textMuted, fontWeight: 500, marginBottom: 6 }}>
+          {label}
+        </div>
         <div
           style={{
-            fontSize: fontSizes.xxl,
+            fontSize: fontSizes.display,
             fontWeight: 700,
-            color: color || colors.text,
+            color: colors.text,
             fontVariantNumeric: 'tabular-nums',
             lineHeight: 1.1,
           }}
         >
           {value}
         </div>
-        {sparkData && sparkData.length >= 2 && (
-          <Sparkline data={sparkData} color={sparkColor || color || colors.primary} width={72} height={26} />
-        )}
       </div>
-      {trend && <TrendIndicator current={trend.current} previous={trend.previous} />}
+      {sparkData && sparkData.length >= 2 ? (
+        <Sparkline data={sparkData} color={sparkColor || accentColor} width={80} height={32} />
+      ) : icon ? (
+        <div style={{ color: accentColor, opacity: 0.3, fontSize: 32 }}>{icon}</div>
+      ) : null}
     </div>
   );
 }
 
-// ── Averages summary row ────────────────────────────────────────
+/* ──────────── Averages strip ─────────────────────────────────── */
+
 function AveragesSummary({
   averages,
 }: {
@@ -125,7 +87,7 @@ function AveragesSummary({
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
         gap: spacing.md,
         padding: '14px 20px',
         background: colors.bgMuted,
@@ -147,7 +109,8 @@ function AveragesSummary({
   );
 }
 
-// ── Range selector options ──────────────────────────────────────
+/* ──────────── Range selector ─────────────────────────────────── */
+
 type RangeOption = '4' | '8' | '12' | 'all';
 const RANGE_OPTIONS: { value: RangeOption; label: string }[] = [
   { value: '4', label: 'Last 4 weeks' },
@@ -156,97 +119,55 @@ const RANGE_OPTIONS: { value: RangeOption; label: string }[] = [
   { value: 'all', label: 'All weeks' },
 ];
 
-// ── Page component ──────────────────────────────────────────────
+/* ──────────── Page ───────────────────────────────────────────── */
+
 export default function DashboardPage() {
   const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
 
   const [weeks, setWeeks] = useState<WeekDto[]>([]);
-  const [range, setRange] = useState<RangeOption>('4');
+  const [range, setRange] = useState<RangeOption>('8');
   const [dashboard, setDashboard] = useState<DashboardDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ── Auth guard ────────────────────────────────────────────────
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace('/login');
-    }
+    if (!authLoading && !user) router.replace('/login');
   }, [user, authLoading, router]);
 
-  // ── Fetch weeks list once ─────────────────────────────────────
   useEffect(() => {
     if (!user) return;
-
     apiFetch<WeekDto[]>('/weeks')
       .then(setWeeks)
       .catch((err) => setError(err.message || 'Failed to load weeks'));
   }, [user]);
 
-  // ── Selected week IDs based on range ──────────────────────────
   const selectedWeekIds = useMemo(() => {
     if (!weeks.length) return [];
     const count = range === 'all' ? weeks.length : parseInt(range, 10);
     return weeks.slice(0, count).map((w) => w.id);
   }, [weeks, range]);
 
-  // ── Fetch dashboard aggregation ───────────────────────────────
   useEffect(() => {
     if (!selectedWeekIds.length) return;
-
     setLoading(true);
     setError(null);
-
     apiFetch<DashboardDto>(`/dashboard?weekIds=${selectedWeekIds.join(',')}`)
-      .then((data) => {
-        setDashboard(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message || 'Failed to load dashboard');
-        setLoading(false);
-      });
+      .then((data) => { setDashboard(data); setLoading(false); })
+      .catch((err) => { setError(err.message || 'Failed to load dashboard'); setLoading(false); });
   }, [selectedWeekIds]);
 
-  // ── Render guards ─────────────────────────────────────────────
-  if (authLoading) {
-    return <main style={{ padding: '2rem', fontFamily }}>Loading...</main>;
-  }
-
+  if (authLoading) return <main style={{ padding: '2rem', fontFamily }}>Loading...</main>;
   if (!user) return null;
 
-  // ── Greeting ──────────────────────────────────────────────────
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
-  // ── Trend helpers: split weeks into two halves ────────────────
   const weeklyData = dashboard?.weeks ?? [];
-  const halfIdx = Math.floor(weeklyData.length / 2);
-  const firstHalf = weeklyData.slice(0, halfIdx);
-  const secondHalf = weeklyData.slice(halfIdx);
 
-  function sumField(wks: typeof weeklyData, field: keyof typeof weeklyData[0]): number {
-    return wks.reduce((acc, w) => acc + (w[field] as number), 0);
-  }
-
-  const trends = dashboard
-    ? {
-        gross: { current: sumField(secondHalf, 'grossAmount'), previous: sumField(firstHalf, 'grossAmount') },
-        profit: { current: sumField(secondHalf, 'profitAmount'), previous: sumField(firstHalf, 'profitAmount') },
-        netProfit: { current: sumField(secondHalf, 'netProfitAmount'), previous: sumField(firstHalf, 'netProfitAmount') },
-        loadCount: { current: sumField(secondHalf, 'loadCount'), previous: sumField(firstHalf, 'loadCount') },
-      }
-    : null;
-
-  // ── Render ────────────────────────────────────────────────────
   return (
-    <PageShell
-      user={user}
-      onLogout={logout}
-      title="Dashboard"
-      subtitle="Weekly profit overview and trends"
-    >
-      {/* Welcome banner */}
+    <PageShell user={user} onLogout={logout} title="Dashboard" subtitle="Weekly profit overview and trends">
+      {/* ── Welcome banner ── */}
       <div
         style={{
           ...cardStyle,
@@ -278,91 +199,80 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Error state */}
       {error && <ErrorBanner message={error} />}
-
-      {/* Loading state */}
       {loading && !dashboard && <LoadingBox message="Loading dashboard..." />}
-
-      {/* Empty state */}
       {!loading && !error && dashboard && dashboard.totals.loadCount === 0 && (
         <EmptyBox title="No data for this range" subtitle="Try selecting a wider range or create some loads first." />
       )}
 
-      {/* Dashboard content */}
       {dashboard && (loading || dashboard.totals.loadCount > 0) && (
         <div style={{ opacity: loading ? 0.6 : 1, transition: `opacity ${transition.normal}` }}>
-          {/* ── KPI Cards row ── */}
+          {/* ── KPI cards (HR Portal style — left colored border) ── */}
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(165px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
               gap: spacing.lg,
               marginBottom: spacing.xl,
             }}
           >
             <KpiCard
-              label="Loads"
+              label="Total Loads"
               value={String(dashboard.totals.loadCount)}
+              accentColor={colors.primary}
               sparkData={weeklyData.map((w) => w.loadCount)}
-              sparkColor={colors.textSecondary}
-              trend={trends?.loadCount}
+              sparkColor={colors.primary}
             />
             <KpiCard
               label="Gross Revenue"
               value={fmt(dashboard.totals.grossAmount)}
-              color={colors.primary}
+              accentColor="#3b82f6"
               sparkData={weeklyData.map((w) => w.grossAmount)}
-              trend={trends?.gross}
-            />
-            <KpiCard
-              label="Driver Cost"
-              value={fmt(dashboard.totals.driverCostAmount)}
-              color={colors.orangeLight}
-              sparkData={weeklyData.map((w) => w.driverCostAmount)}
-              sparkColor={colors.orangeLight}
-            />
-            <KpiCard
-              label="Profit"
-              value={fmt(dashboard.totals.profitAmount)}
-              color={dashboard.totals.profitAmount >= 0 ? colors.success : colors.danger}
-              sparkData={weeklyData.map((w) => w.profitAmount)}
-              sparkColor={colors.success}
-              trend={trends?.profit}
-            />
-            <KpiCard
-              label="OTR (1.25%)"
-              value={fmt(dashboard.totals.otrAmount)}
-              color={colors.purple}
-              sparkData={weeklyData.map((w) => w.otrAmount)}
-              sparkColor={colors.purple}
+              sparkColor="#3b82f6"
             />
             <KpiCard
               label="Net Profit"
               value={fmt(dashboard.totals.netProfitAmount)}
-              color={dashboard.totals.netProfitAmount >= 0 ? colors.teal : colors.danger}
+              accentColor={dashboard.totals.netProfitAmount >= 0 ? colors.success : colors.danger}
               sparkData={weeklyData.map((w) => w.netProfitAmount)}
-              sparkColor={colors.teal}
-              trend={trends?.netProfit}
+              sparkColor={colors.success}
+            />
+            <KpiCard
+              label="Driver Cost"
+              value={fmt(dashboard.totals.driverCostAmount)}
+              accentColor={colors.orangeLight}
+              sparkData={weeklyData.map((w) => w.driverCostAmount)}
+              sparkColor={colors.orangeLight}
             />
           </div>
 
-          {/* ── Averages summary strip ── */}
+          {/* ── Averages strip ── */}
           <div style={{ marginBottom: spacing.xl }}>
             <AveragesSummary averages={dashboard.averages} />
           </div>
 
-          {/* ── Charts row 1: Revenue bar + Margin trend ── */}
-          <div style={{ display: 'flex', gap: spacing.xl, flexWrap: 'wrap', marginBottom: spacing.xl }}>
-            <ProfitStatsChart weeks={weeklyData} />
-            <ProfitMarginChart weeks={weeklyData} />
+          {/* ── Status cards with ring indicators (HR Portal style) ── */}
+          <div style={{ marginBottom: spacing.xl }}>
+            <h2 style={{ fontSize: fontSizes.xl, fontWeight: 700, color: colors.text, marginBottom: spacing.sm }}>
+              Load Status
+            </h2>
+            <p style={{ fontSize: fontSizes.md, color: colors.textSecondary, marginBottom: spacing.lg }}>
+              Distribution for the selected period
+            </p>
+            <StatusStatsCards breakdown={dashboard.statusBreakdown} totalLoads={dashboard.totals.loadCount} />
           </div>
 
-          {/* ── Charts row 2: Status donut + Top corridors + Flags ── */}
+          {/* ── Profit Statistics chart (Net Profit + Driver Cost bars, Margin % line) ── */}
+          <div style={{ marginBottom: spacing.xl }}>
+            <ProfitStatsChart weeks={weeklyData} />
+          </div>
+
+          {/* ── Bottom: Corridors + Flags ── */}
           <div style={{ display: 'flex', gap: spacing.xl, flexWrap: 'wrap', marginBottom: spacing.xl }}>
-            <StatusDonutChart breakdown={dashboard.statusBreakdown} totalLoads={dashboard.totals.loadCount} />
-            <div style={{ flex: 1, minWidth: 300, display: 'flex', flexDirection: 'column', gap: spacing.xl }}>
+            <div style={{ flex: 2, minWidth: 340 }}>
               <TopCorridorsCard corridors={dashboard.topCorridors} />
+            </div>
+            <div style={{ flex: 1, minWidth: 280 }}>
               <FlagSummaryCard flags={dashboard.flags} totalLoads={dashboard.totals.loadCount} />
             </div>
           </div>

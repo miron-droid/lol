@@ -2,16 +2,16 @@
  * seed-production.ts — Populate the database with realistic production-scale data.
  *
  * Creates:
- *   - 6 users (admin + accountant + 4 dispatchers + 1 assistant)
+ *   - 7 users (admin + accountant + 4 dispatchers + 1 assistant)
  *   - 10 drivers, 8 units, 12 brokerages
- *   - 12 weeks (W1..W12 of 2026)
- *   - ~200+ loads with diverse statuses, flags, routes
+ *   - 24 weeks (W1..W24 of 2026, Jan 5 – Jun 14)
+ *   - ~500+ loads with diverse statuses, flags, routes
  *   - 1 active salary rule set
  *
  * Idempotent: re-running is safe — existing records are skipped.
  *
  * Usage:
- *   npx ts-node -r tsconfig-paths/register packages/api/src/database/seed-production.ts
+ *   npm run seed:prod -w packages/api          (from repo root)
  */
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
@@ -81,7 +81,7 @@ async function seed() {
   const hash = await bcrypt.hash('password123', 10);
 
   // ═══════════════════════════════════════════════════════════════════
-  // 1. USERS — admin, accountant, 4 dispatchers, 1 assistant
+  // 1. USERS
   // ═══════════════════════════════════════════════════════════════════
   const userData = [
     { email: 'admin@tlslogistics.us', firstName: 'Admin', lastName: 'LOL', role: Role.Admin },
@@ -97,9 +97,7 @@ async function seed() {
   for (const u of userData) {
     let existing = await userRepo.findOne({ where: { email: u.email } });
     if (!existing) {
-      existing = await userRepo.save(
-        userRepo.create({ ...u, passwordHash: hash }),
-      );
+      existing = await userRepo.save(userRepo.create({ ...u, passwordHash: hash }));
       console.log(`✅ User created: ${u.firstName} ${u.lastName} (${u.role})`);
     } else {
       console.log(`ℹ️  User exists: ${u.firstName} ${u.lastName}`);
@@ -194,10 +192,11 @@ async function seed() {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // 3. WEEKS — W1 through W12 of 2026 (Jan 5 – Mar 22)
+  // 3. WEEKS — W1 through W24 of 2026 (Jan 5 – Jun 14)
   // ═══════════════════════════════════════════════════════════════════
+  const TOTAL_WEEKS = 24;
   const weeks: Week[] = [];
-  for (let w = 1; w <= 12; w++) {
+  for (let w = 1; w <= TOTAL_WEEKS; w++) {
     const monday = isoWeekToMonday(2026, w);
     const sunday = new Date(monday);
     sunday.setUTCDate(monday.getUTCDate() + 6);
@@ -222,16 +221,16 @@ async function seed() {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // 4. LOADS — ~200+ across 12 weeks, realistic routes
+  // 4. LOADS — ~500+ across 24 weeks, realistic routes
   // ═══════════════════════════════════════════════════════════════════
   const existingLoadCount = await loadRepo.count();
-  if (existingLoadCount > 30) {
+  if (existingLoadCount > 100) {
     console.log(`\nℹ️  ${existingLoadCount} loads already exist — skipping load seed.`);
   } else {
-    // If only demo loads exist, remove them to replace with production data
+    // Clear old data
     if (existingLoadCount > 0) {
       await loadRepo.delete({});
-      console.log(`🗑️  Cleared ${existingLoadCount} existing demo loads.`);
+      console.log(`🗑️  Cleared ${existingLoadCount} existing loads.`);
     }
 
     const routes = [
@@ -240,21 +239,26 @@ async function seed() {
       { from: 'Houston, TX', fromState: 'TX', to: 'San Antonio, TX', toState: 'TX', miles: 197 },
       { from: 'Dallas, TX', fromState: 'TX', to: 'Jackson, MS', toState: 'MS', miles: 420 },
       { from: 'El Paso, TX', fromState: 'TX', to: 'Dallas, TX', toState: 'TX', miles: 637 },
+      { from: 'Austin, TX', fromState: 'TX', to: 'New Orleans, LA', toState: 'LA', miles: 512 },
       // Midwest
       { from: 'Chicago, IL', fromState: 'IL', to: 'Indianapolis, IN', toState: 'IN', miles: 180 },
       { from: 'Chicago, IL', fromState: 'IL', to: 'Detroit, MI', toState: 'MI', miles: 282 },
       { from: 'Minneapolis, MN', fromState: 'MN', to: 'Chicago, IL', toState: 'IL', miles: 410 },
       { from: 'Kansas City, MO', fromState: 'MO', to: 'St. Louis, MO', toState: 'MO', miles: 250 },
+      { from: 'Columbus, OH', fromState: 'OH', to: 'Pittsburgh, PA', toState: 'PA', miles: 185 },
       // Southeast
       { from: 'Atlanta, GA', fromState: 'GA', to: 'Nashville, TN', toState: 'TN', miles: 250 },
       { from: 'Miami, FL', fromState: 'FL', to: 'Orlando, FL', toState: 'FL', miles: 235 },
       { from: 'Charlotte, NC', fromState: 'NC', to: 'Atlanta, GA', toState: 'GA', miles: 245 },
       { from: 'Jacksonville, FL', fromState: 'FL', to: 'Savannah, GA', toState: 'GA', miles: 140 },
+      { from: 'Tampa, FL', fromState: 'FL', to: 'Miami, FL', toState: 'FL', miles: 280 },
+      { from: 'Raleigh, NC', fromState: 'NC', to: 'Richmond, VA', toState: 'VA', miles: 170 },
       // West coast
       { from: 'Los Angeles, CA', fromState: 'CA', to: 'Phoenix, AZ', toState: 'AZ', miles: 370 },
       { from: 'Seattle, WA', fromState: 'WA', to: 'Portland, OR', toState: 'OR', miles: 175 },
       { from: 'Sacramento, CA', fromState: 'CA', to: 'Reno, NV', toState: 'NV', miles: 135 },
       { from: 'Los Angeles, CA', fromState: 'CA', to: 'Las Vegas, NV', toState: 'NV', miles: 270 },
+      { from: 'San Francisco, CA', fromState: 'CA', to: 'Sacramento, CA', toState: 'CA', miles: 87 },
       // Long haul
       { from: 'Denver, CO', fromState: 'CO', to: 'Kansas City, MO', toState: 'MO', miles: 600 },
       { from: 'Memphis, TN', fromState: 'TN', to: 'Dallas, TX', toState: 'TX', miles: 452 },
@@ -262,6 +266,9 @@ async function seed() {
       { from: 'Salt Lake City, UT', fromState: 'UT', to: 'Denver, CO', toState: 'CO', miles: 525 },
       { from: 'Philadelphia, PA', fromState: 'PA', to: 'Columbus, OH', toState: 'OH', miles: 472 },
       { from: 'Louisville, KY', fromState: 'KY', to: 'Cincinnati, OH', toState: 'OH', miles: 100 },
+      { from: 'Boston, MA', fromState: 'MA', to: 'New York, NY', toState: 'NY', miles: 215 },
+      { from: 'Baltimore, MD', fromState: 'MD', to: 'Philadelphia, PA', toState: 'PA', miles: 100 },
+      { from: 'Phoenix, AZ', fromState: 'AZ', to: 'Albuquerque, NM', toState: 'NM', miles: 420 },
     ];
 
     const businesses = [
@@ -270,6 +277,8 @@ async function seed() {
       'Tyson Foods', 'PepsiCo Beverages', 'General Mills',
       'Procter & Gamble', 'Tesla Parts', 'John Deere',
       'Caterpillar Inc', 'Sysco Corporation', 'US Foods',
+      'Kroger Logistics', 'UPS Supply Chain', 'Dollar General',
+      'Lowe\'s Distribution', 'Anheuser-Busch', 'Coca-Cola',
     ];
 
     const netsuiteRefs = ['NS-', 'INV-', 'PO-'];
@@ -278,9 +287,17 @@ async function seed() {
     let totalLoads = 0;
 
     for (const week of weeks) {
-      // Each dispatcher gets 3–6 loads per week (heavier weeks = more revenue)
+      const weekIdx = weeks.indexOf(week);
+
+      // Seasonality: weeks 1-4 lighter (winter), 8-16 peak, 17+ steady
+      let dispatcherMin = 3;
+      let dispatcherMax = 6;
+      if (weekIdx < 4) { dispatcherMin = 2; dispatcherMax = 5; }
+      else if (weekIdx >= 7 && weekIdx <= 15) { dispatcherMin = 5; dispatcherMax = 8; }
+      else { dispatcherMin = 4; dispatcherMax = 7; }
+
       for (const disp of dispatchers) {
-        const loadCount = rand(3, 6);
+        const loadCount = rand(dispatcherMin, dispatcherMax);
 
         for (let i = 0; i < loadCount; i++) {
           const route = pick(routes);
@@ -289,72 +306,81 @@ async function seed() {
           const driver = pick(drivers);
           const unit = pick(units);
 
-          // Revenue varies: $1,500 – $12,000 per load
-          const gross = rand(1500, 12000);
-          // Driver cost: 45–75% of gross (variance by route type)
-          const driverPct = 0.45 + Math.random() * 0.30;
+          // Revenue varies: $1,800 – $14,000 per load, with slight upward trend over weeks
+          const baseLow = 1800 + weekIdx * 20;
+          const baseHigh = 10000 + weekIdx * 80;
+          const gross = rand(baseLow, baseHigh);
+          // Driver cost: 45–72% of gross
+          const driverPct = 0.45 + Math.random() * 0.27;
           const driverCost = Math.round(gross * driverPct);
           const profit = gross - driverCost;
           const profitPercent = gross > 0 ? round2((profit / gross) * 100) : 0;
           const otr = round2(gross * 0.0125);
           const netProfit = round2(profit - otr);
 
-          // Determine load status based on week position
-          const weekIdx = weeks.indexOf(week);
+          // Status based on week age
           let loadStatus: LoadStatus;
-          if (weekIdx < weeks.length - 2) {
-            // Older weeks: mostly completed, some cancelled
-            loadStatus = Math.random() < 0.05 ? LoadStatus.Cancelled : LoadStatus.Completed;
-          } else if (weekIdx === weeks.length - 2) {
-            // Second-to-last week: mix
+          if (weekIdx < TOTAL_WEEKS - 3) {
+            // Old weeks: mostly completed
             const r = Math.random();
-            if (r < 0.65) loadStatus = LoadStatus.Completed;
+            if (r < 0.88) loadStatus = LoadStatus.Completed;
+            else if (r < 0.94) loadStatus = LoadStatus.Delivered;
+            else loadStatus = LoadStatus.Cancelled;
+          } else if (weekIdx === TOTAL_WEEKS - 3) {
+            const r = Math.random();
+            if (r < 0.60) loadStatus = LoadStatus.Completed;
             else if (r < 0.80) loadStatus = LoadStatus.Delivered;
-            else if (r < 0.90) loadStatus = LoadStatus.InTransit;
+            else if (r < 0.92) loadStatus = LoadStatus.InTransit;
+            else loadStatus = LoadStatus.NotPickedUp;
+          } else if (weekIdx === TOTAL_WEEKS - 2) {
+            const r = Math.random();
+            if (r < 0.30) loadStatus = LoadStatus.Completed;
+            else if (r < 0.55) loadStatus = LoadStatus.Delivered;
+            else if (r < 0.80) loadStatus = LoadStatus.InTransit;
             else loadStatus = LoadStatus.NotPickedUp;
           } else {
-            // Current week: active mix
+            // Current week
             const r = Math.random();
-            if (r < 0.25) loadStatus = LoadStatus.Completed;
-            else if (r < 0.45) loadStatus = LoadStatus.Delivered;
-            else if (r < 0.70) loadStatus = LoadStatus.InTransit;
+            if (r < 0.10) loadStatus = LoadStatus.Completed;
+            else if (r < 0.25) loadStatus = LoadStatus.Delivered;
+            else if (r < 0.55) loadStatus = LoadStatus.InTransit;
             else loadStatus = LoadStatus.NotPickedUp;
           }
 
-          // Flags — realistic distribution
           const quickPayFlag = Math.random() < 0.15;
           const factoringFlag = !quickPayFlag && Math.random() < 0.25;
           const directPaymentFlag = !quickPayFlag && !factoringFlag && Math.random() < 0.10;
           const driverPaidFlag = loadStatus === LoadStatus.Completed && Math.random() < 0.85;
 
-          // Date within the week (Mon–Fri)
           const dateOffset = rand(0, 4);
           const loadDate = new Date(week.startDate);
           loadDate.setDate(loadDate.getDate() + dateOffset);
           const date = dateStr(loadDate);
 
-          const fromDateObj = new Date(date);
           const transitDays = Math.ceil(route.miles / 500) || 1;
           const toDateObj = new Date(date);
           toDateObj.setDate(toDateObj.getDate() + transitDays);
 
           const sylNumber = `TLS26-${String(week.isoWeek).padStart(2, '0')}-${String(loadNum).padStart(3, '0')}`;
 
-          // Some loads have Netsuite refs (60%)
           const netsuiteRef = Math.random() < 0.6
             ? `${pick(netsuiteRefs)}${2026}${String(week.isoWeek).padStart(2, '0')}-${rand(1000, 9999)}`
             : null;
 
-          // Some loads come from external source (30%)
           const isExternal = Math.random() < 0.3;
           const externalSource = isExternal ? 'cargo_etl' : null;
           const externalLoadKey = isExternal ? `CRG-${rand(100000, 999999)}` : null;
 
           const comment = loadStatus === LoadStatus.Cancelled
-            ? pick(['Shipper cancelled', 'Driver no-show', 'Weather delay — cancelled', 'Rate dispute'])
+            ? pick(['Shipper cancelled', 'Driver no-show', 'Weather delay — cancelled', 'Rate dispute', 'Receiver refused'])
             : Math.random() < 0.15
-              ? pick(['Detention 2h at pickup', 'TONU applied', 'Lumper fee included', 'Deadhead 45mi', 'Team drivers needed'])
+              ? pick(['Detention 2h at pickup', 'TONU applied', 'Lumper fee included', 'Deadhead 45mi', 'Team drivers needed', 'Hazmat load', 'Oversize permit required'])
               : null;
+
+          // Randomly archive ~3% of old completed loads
+          const archivedAt = loadStatus === LoadStatus.Completed && weekIdx < TOTAL_WEEKS - 5 && Math.random() < 0.03
+            ? new Date().toISOString()
+            : null;
 
           await loadRepo.save(
             loadRepo.create({
@@ -389,6 +415,7 @@ async function seed() {
               externalSource,
               externalLoadKey,
               comment,
+              archivedAt: archivedAt as any,
             }),
           );
           loadNum++;
@@ -400,7 +427,7 @@ async function seed() {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // 5. SALARY RULE — tiered commission structure
+  // 5. SALARY RULE
   // ═══════════════════════════════════════════════════════════════════
   const existingRule = await ruleRepo.findOne({ where: { isActive: true } });
   if (!existingRule) {
