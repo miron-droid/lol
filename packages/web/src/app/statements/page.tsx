@@ -9,7 +9,7 @@ import { usePermissions } from '@/lib/permissions';
 import { useMasterData } from '@/lib/use-master-data';
 import { apiFetch } from '@/lib/api';
 import { getErrorMessage } from '@/lib/errors';
-import { labelStyle, inputStyle, checkboxLabelStyle, fmt, tabBtnStyle, thStyle, tdStyle, tdRight, tableWrapperStyle, tableStyle, smallBtnStyle, primaryBtnStyle, loadingBtnStyle, accessDeniedStyle, accessDeniedSubtextStyle, badgeStyle, zebraRowProps, thAction, tdAction } from '@/lib/styles';
+import { labelStyle, inputStyle, checkboxLabelStyle, fmt, tabBtnStyle, thStyle, tdStyle, tdRight, tableWrapperStyle, tableStyle, smallBtnStyle, primaryBtnStyle, loadingBtnStyle, accessDeniedStyle, accessDeniedSubtextStyle, badgeStyle, zebraRowProps, thAction, tdAction, colors, spacing } from '@/lib/styles';
 import { ErrorBanner, LoadingBox, EmptyBox } from '@/components/StateBoxes';
 import { EntityPicker } from '@/components/EntityPicker';
 import { PageShell } from '@/components/PageShell';
@@ -164,7 +164,7 @@ export default function StatementsPage() {
       subtitle="Generate and manage driver/owner statements"
     >
       {/* ── Tabs ── */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', gap: spacing.md, marginBottom: spacing.xl }}>
         <button onClick={() => setView('form')} style={tabBtnStyle(view === 'form')}>Generate</button>
         <button onClick={() => setView('archive')} style={tabBtnStyle(view === 'archive')}>Archive</button>
       </div>
@@ -175,14 +175,14 @@ export default function StatementsPage() {
       {/* ── Form view ── */}
       {view === 'form' && (
         <div style={{ maxWidth: 500 }}>
-          <div style={{ marginBottom: '1rem' }}>
+          <div style={{ marginBottom: spacing.xl }}>
             <label style={labelStyle}>Statement Type</label>
             <select style={inputStyle} value={statementType} onChange={(e) => setStatementType(e.target.value as StatementType)}>
               <option value="driver">Driver</option>
               <option value="owner">Owner</option>
             </select>
           </div>
-          <div style={{ marginBottom: '1rem' }}>
+          <div style={{ marginBottom: spacing.xl }}>
             <label style={labelStyle}>Week</label>
             <select style={inputStyle} value={weekId} onChange={(e) => setWeekId(e.target.value)}>
               {weeks.map((w) => (
@@ -192,19 +192,19 @@ export default function StatementsPage() {
               ))}
             </select>
           </div>
-          <div style={{ marginBottom: '1rem' }}>
+          <div style={{ marginBottom: spacing.xl }}>
             <label style={labelStyle}>Payment Filter</label>
             <select style={inputStyle} value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value as PaymentFilter)}>
               {PAYMENT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
-          <div style={{ marginBottom: '1rem' }}>
+          <div style={{ marginBottom: spacing.xl }}>
             <label style={checkboxLabelStyle}>
               <input type="checkbox" checked={onlyUnpaid} onChange={(e) => setOnlyUnpaid(e.target.checked)} />
               Only Unpaid (driver not paid)
             </label>
           </div>
-          <div style={{ marginBottom: '1.25rem' }}>
+          <div style={{ marginBottom: spacing.xxl }}>
             <EntityPicker
               label="Unit"
               value={unitId}
@@ -281,7 +281,7 @@ export default function StatementsPage() {
                       <td style={tdStyle}>{s.unitId ? s.unitId.substring(0, 8) + '...' : '—'}</td>
                       <td style={tdStyle}>{s.loadCount}</td>
                       <td style={tdRight}>{fmt(s.totalGross)}</td>
-                      <td style={{ ...tdRight, color: s.totalNetProfit >= 0 ? '#00897b' : '#d32f2f' }}>{fmt(s.totalNetProfit)}</td>
+                      <td style={{ ...tdRight, color: s.totalNetProfit >= 0 ? colors.teal : colors.danger }}>{fmt(s.totalNetProfit)}</td>
                       <td style={tdStyle}>{new Date(s.generatedAt).toLocaleString()}</td>
                       <td style={tdStyle}>{s.generatedByName}</td>
                       <td style={tdAction}>

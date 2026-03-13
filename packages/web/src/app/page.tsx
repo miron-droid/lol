@@ -91,7 +91,7 @@ export default function HomePage() {
         {allowed(Action.SalaryRulesRead) && (
           <button
             onClick={() => router.push('/settings')}
-            style={homeBtn('#546e7a')}
+            style={homeBtn(colors.slate)}
           >
             Settings
           </button>

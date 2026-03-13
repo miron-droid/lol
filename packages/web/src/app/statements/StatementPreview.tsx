@@ -12,7 +12,7 @@ interface PreviewProps {
 
 function FlagCell({ value }: { value: boolean }) {
   return (
-    <span style={{ color: value ? colors.success : '#bdbdbd', fontWeight: value ? 600 : 400 }}>
+    <span style={{ color: value ? colors.success : colors.flagInactive, fontWeight: value ? 600 : 400 }}>
       {value ? 'Y' : '-'}
     </span>
   );

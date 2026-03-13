@@ -142,7 +142,7 @@ function FinancePreview({ grossAmount, driverCostAmount }: { grossAmount: string
         ...cardStyle,
         marginTop: spacing.lg,
         background: colors.primaryLight,
-        borderColor: '#b3d4fc',
+        borderColor: '${colors.primaryBorder}',
       }}
     >
       <div style={{ fontSize: fontSizes.sm, fontWeight: 600, color: colors.textSecondary, marginBottom: spacing.sm }}>
@@ -164,7 +164,7 @@ function FinancePreview({ grossAmount, driverCostAmount }: { grossAmount: string
         <span>OTR (1.25%)</span>
         <span style={{ fontWeight: 600 }}>{fmtCurrency(breakdown.otrAmount)}</span>
       </div>
-      <div style={{ ...rowStyle, borderTop: '1px solid #b3d4fc', paddingTop: spacing.sm, marginTop: '0.125rem' }}>
+      <div style={{ ...rowStyle, borderTop: '1px solid ${colors.primaryBorder}', paddingTop: spacing.sm, marginTop: '0.125rem' }}>
         <span style={{ fontWeight: 600 }}>Net Profit</span>
         <span style={{ fontWeight: 600, color: breakdown.netProfitAmount >= 0 ? colors.success : colors.danger }}>
           {fmtCurrency(breakdown.netProfitAmount)}
@@ -272,7 +272,7 @@ export function LoadForm({
             </select>
           </div>
         </div>
-        <div style={{ ...gridTwo, marginTop: '0.75rem' }}>
+        <div style={{ ...gridTwo, marginTop: spacing.lg }}>
           <div>
             <label style={labelStyle}>Load Date *</label>
             <input
@@ -322,7 +322,7 @@ export function LoadForm({
             disabled={disabled}
           />
         </div>
-        <div style={{ ...gridThree, marginTop: '0.75rem' }}>
+        <div style={{ ...gridThree, marginTop: spacing.lg }}>
           <EntityPicker
             label="Unit"
             value={form.unitId}
@@ -351,7 +351,7 @@ export function LoadForm({
             disabled={disabled}
           />
         </div>
-        <div style={{ marginTop: '0.75rem' }}>
+        <div style={{ marginTop: spacing.lg }}>
           <label style={labelStyle}>Netsuite Ref</label>
           <input
             style={inputStyle}
@@ -384,7 +384,7 @@ export function LoadForm({
             />
           </div>
         </div>
-        <div style={{ marginTop: '0.75rem' }}>
+        <div style={{ marginTop: spacing.lg }}>
           <label style={labelStyle}>From Date *</label>
           <input
             type="date"
@@ -393,7 +393,7 @@ export function LoadForm({
             onChange={(e) => set('fromDate', e.target.value)}
           />
         </div>
-        <div style={{ ...gridThree, marginTop: '0.75rem' }}>
+        <div style={{ ...gridThree, marginTop: spacing.lg }}>
           <div style={{ gridColumn: 'span 2' }}>
             <label style={labelStyle}>To Address *</label>
             <input
@@ -413,7 +413,7 @@ export function LoadForm({
             />
           </div>
         </div>
-        <div style={{ marginTop: '0.75rem' }}>
+        <div style={{ marginTop: spacing.lg }}>
           <label style={labelStyle}>To Date *</label>
           <input
             type="date"
@@ -422,7 +422,7 @@ export function LoadForm({
             onChange={(e) => set('toDate', e.target.value)}
           />
         </div>
-        <div style={{ marginTop: '0.75rem' }}>
+        <div style={{ marginTop: spacing.lg }}>
           <label style={labelStyle}>Miles</label>
           <input
             type="number"

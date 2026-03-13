@@ -106,7 +106,7 @@ export function EntityPicker({
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
-            color: selectedLabel && selectedLabel !== value ? '#222' : colors.textMuted,
+            color: selectedLabel && selectedLabel !== value ? colors.text : colors.textMuted,
           }}
         >
           {loading ? 'Loading...' : selectedLabel || placeholder}
@@ -143,7 +143,7 @@ export function EntityPicker({
             left: 0,
             right: 0,
             zIndex: 100,
-            background: '#fff',
+            background: colors.bgWhite,
             border: `1px solid ${colors.border}`,
             borderRadius: `0 0 ${radii.md}px ${radii.md}px`,
             boxShadow: shadows.dropdown,

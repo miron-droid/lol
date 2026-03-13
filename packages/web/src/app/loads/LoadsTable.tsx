@@ -2,7 +2,7 @@
 
 import type { LoadDto } from '@lol/shared';
 import { LoadStatus } from '@lol/shared';
-import { thStyle, tdStyle, tdRight, smallBtnStyle, tableWrapperStyle, tableStyle, badgeStyle, tagStyle, thAction, tdAction, colors, zebraRowProps, fmt } from '@/lib/styles';
+import { thStyle, tdStyle, tdRight, smallBtnStyle, tableWrapperStyle, tableStyle, badgeStyle, tagStyle, thAction, tdAction, colors, spacing, zebraRowProps, fmt } from '@/lib/styles';
 
 interface LoadsTableProps {
   loads: LoadDto[];
@@ -29,7 +29,7 @@ const STATUS_BADGE_VARIANT: Record<LoadStatus, 'muted' | 'info' | 'success' | 'd
 
 function FlagCell({ value }: { value: boolean }) {
   return (
-    <span style={{ color: value ? '#388e3c' : '#bdbdbd', fontWeight: value ? 600 : 400 }}>
+    <span style={{ color: value ? colors.success : colors.flagInactive, fontWeight: value ? 600 : 400 }}>
       {value ? 'Y' : '-'}
     </span>
   );
@@ -63,7 +63,7 @@ export function LoadsTable({ loads, onEdit, onArchive, onUnarchive }: LoadsTable
         <tbody>
           {loads.map((load, idx) => {
             const isArchived = !!load.archivedAt;
-            const zebra = zebraRowProps(idx, isArchived ? '#fff8e1' : undefined);
+            const zebra = zebraRowProps(idx, isArchived ? colors.warningBg : undefined);
             return (
             <tr
               key={load.id}
@@ -112,7 +112,7 @@ export function LoadsTable({ loads, onEdit, onArchive, onUnarchive }: LoadsTable
               <td style={{ ...tdStyle, textAlign: 'center' }}><FlagCell value={load.factoringFlag} /></td>
               <td style={{ ...tdStyle, textAlign: 'center' }}><FlagCell value={load.driverPaidFlag} /></td>
               <td style={tdAction}>
-                <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', gap: spacing.xs, justifyContent: 'center' }}>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -131,7 +131,7 @@ export function LoadsTable({ loads, onEdit, onArchive, onUnarchive }: LoadsTable
                       style={{
                         ...smallBtnStyle,
                         background: colors.warningBg,
-                        borderColor: '#ffb74d',
+                        borderColor: colors.warningBorder,
                         color: colors.orange,
                       }}
                     >

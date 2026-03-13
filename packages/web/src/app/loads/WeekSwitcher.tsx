@@ -1,7 +1,7 @@
 'use client';
 
 import type { WeekDto } from '@lol/shared';
-import { inputStyle, fontSizes } from '@/lib/styles';
+import { inputStyle, fontSizes, spacing } from '@/lib/styles';
 
 interface WeekSwitcherProps {
   weeks: WeekDto[];
@@ -11,7 +11,7 @@ interface WeekSwitcherProps {
 
 export function WeekSwitcher({ weeks, selectedWeek, onSelect }: WeekSwitcherProps) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
       <label
         htmlFor="week-select"
         style={{ fontSize: fontSizes.md, fontWeight: 600, whiteSpace: 'nowrap' }}

@@ -8,7 +8,7 @@ import { apiFetch } from '@/lib/api';
 import { ProfitStatsChart, SpecialProfitStatsChart } from './DashboardCharts';
 import { PageShell } from '@/components/PageShell';
 import { ErrorBanner, LoadingBox, EmptyBox } from '@/components/StateBoxes';
-import { fmt, tabBtnStyle, cardStyle, colors, fontSizes } from '@/lib/styles';
+import { fmt, tabBtnStyle, cardStyle, colors, fontSizes, spacing, transition } from '@/lib/styles';
 
 // ── KPI card ─────────────────────────────────────────────────
 function KpiCard({
@@ -31,7 +31,7 @@ function KpiCard({
       <div style={{ fontSize: fontSizes.sm, color: colors.textMuted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: 4 }}>
         {label}
       </div>
-      <div style={{ fontSize: '1.375rem', fontWeight: 700, color: color || colors.text, fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ fontSize: fontSizes.xxl, fontWeight: 700, color: color || colors.text, fontVariantNumeric: 'tabular-nums' }}>
         {value}
       </div>
     </div>
@@ -112,7 +112,7 @@ export default function DashboardPage() {
     <PageShell breadcrumb="/ Dashboard" user={user} onLogout={logout} nav={[{label:'Home',href:'/'},{label:'Loads',href:'/loads'}]} title="Dashboard" subtitle="Weekly profit overview and trends">
 
       {/* Range selector */}
-      <div style={{ marginBottom: '1.25rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+      <div style={{ marginBottom: spacing.xxl, display: 'flex', gap: spacing.md, alignItems: 'center' }}>
         <span style={{ fontSize: fontSizes.base, color: colors.textSecondary, fontWeight: 500 }}>Range:</span>
         {RANGE_OPTIONS.map((opt) => (
           <button
@@ -143,26 +143,26 @@ export default function DashboardPage() {
           <div
             style={{
               display: 'flex',
-              gap: '0.75rem',
-              marginBottom: '1.5rem',
+              gap: spacing.lg,
+              marginBottom: spacing.xxl,
               flexWrap: 'wrap',
               opacity: loading ? 0.6 : 1,
-              transition: 'opacity 0.2s',
+              transition: `opacity ${transition.normal}`,
             }}
           >
             <KpiCard label="Load Count" value={String(dashboard.totals.loadCount)} />
-            <KpiCard label="Gross" value={fmt(dashboard.totals.grossAmount)} color="#1976d2" />
-            <KpiCard label="Driver Cost" value={fmt(dashboard.totals.driverCostAmount)} color="#f57c00" />
+            <KpiCard label="Gross" value={fmt(dashboard.totals.grossAmount)} color={colors.primary} />
+            <KpiCard label="Driver Cost" value={fmt(dashboard.totals.driverCostAmount)} color={colors.orangeLight} />
             <KpiCard
               label="Profit"
               value={fmt(dashboard.totals.profitAmount)}
-              color={dashboard.totals.profitAmount >= 0 ? '#388e3c' : '#d32f2f'}
+              color={dashboard.totals.profitAmount >= 0 ? colors.success : colors.danger}
             />
-            <KpiCard label="OTR" value={fmt(dashboard.totals.otrAmount)} color="#7b1fa2" />
+            <KpiCard label="OTR" value={fmt(dashboard.totals.otrAmount)} color={colors.purple} />
             <KpiCard
               label="Net Profit"
               value={fmt(dashboard.totals.netProfitAmount)}
-              color={dashboard.totals.netProfitAmount >= 0 ? '#00897b' : '#d32f2f'}
+              color={dashboard.totals.netProfitAmount >= 0 ? colors.teal : colors.danger}
             />
           </div>
 
@@ -170,10 +170,10 @@ export default function DashboardPage() {
           <div
             style={{
               display: 'flex',
-              gap: '1rem',
+              gap: spacing.xl,
               flexWrap: 'wrap',
               opacity: loading ? 0.6 : 1,
-              transition: 'opacity 0.2s',
+              transition: `opacity ${transition.normal}`,
             }}
           >
             <ProfitStatsChart weeks={dashboard.weeks} />

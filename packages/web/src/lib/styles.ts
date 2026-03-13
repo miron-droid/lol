@@ -35,6 +35,9 @@ export const colors = {
   bgMuted: '#fafafa',
   bgWhite: '#fff',
   bgHover: '#f5f9ff',
+  primaryBorder: '#90caf9',
+  slate: '#546e7a',
+  flagInactive: '#bdbdbd',
 } as const;
 
 // ── Spacing ────────────────────────────────────────────────────
@@ -624,8 +627,8 @@ export function disabledBtnStyle(
   if (!isDisabled) return base;
   return {
     ...base,
-    background: '#e0e0e0',
-    color: '#999',
+    background: colors.borderLight,
+    color: colors.textMuted,
     cursor: 'not-allowed',
     opacity: 0.7,
   };
@@ -639,10 +642,62 @@ export function loadingBtnStyle(
   if (!isLoading) return base;
   return {
     ...base,
-    background: '#999',
+    background: colors.textMuted,
     cursor: 'default',
   };
 }
+
+// ══════════════════════════════════════════════════════════════
+// AUDIT LOG PANEL
+// ══════════════════════════════════════════════════════════════
+
+/** Audit log panel container */
+export const auditPanelStyle: React.CSSProperties = {
+  marginBottom: spacing.xl,
+  border: `1px solid ${colors.borderLight}`,
+  borderRadius: radii.lg,
+  background: colors.bgMuted,
+  maxHeight: 300,
+  overflowY: 'auto',
+};
+
+/** Audit log panel header bar */
+export const auditPanelHeaderStyle: React.CSSProperties = {
+  padding: `${spacing.md} ${spacing.lg}`,
+  borderBottom: `1px solid ${colors.borderLight}`,
+  fontWeight: 600,
+  fontSize: fontSizes.base,
+  background: colors.bgPage,
+};
+
+/** Audit log empty state */
+export const auditPanelEmptyStyle: React.CSSProperties = {
+  padding: spacing.xl,
+  textAlign: 'center',
+  color: colors.textMuted,
+  fontSize: fontSizes.base,
+};
+
+/** Compact audit log table */
+export const auditTableStyle: React.CSSProperties = {
+  width: '100%',
+  borderCollapse: 'collapse',
+  fontSize: fontSizes.base,
+};
+
+/** Audit table header row */
+export const auditThStyle: React.CSSProperties = {
+  padding: `${spacing.sm} ${spacing.lg}`,
+  fontWeight: 600,
+  background: colors.bgPage,
+  textAlign: 'left',
+};
+
+/** Audit table data cell */
+export const auditTdStyle: React.CSSProperties = {
+  padding: `${spacing.sm} ${spacing.lg}`,
+  borderBottom: `1px solid ${colors.borderSubtle}`,
+};
 
 /** Currency formatter */
 export function fmt(n: number): string {

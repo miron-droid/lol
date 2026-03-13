@@ -1,7 +1,7 @@
 'use client';
 
 import type { WeeklyAggregation } from '@lol/shared';
-import { cardStyle, fontSizes, colors } from '@/lib/styles';
+import { cardStyle, fontSizes, spacing, colors } from '@/lib/styles';
 
 interface ChartsProps {
   weeks: WeeklyAggregation[];
@@ -42,10 +42,10 @@ function BarChart({
         minWidth: 380,
       }}
     >
-      <h3 style={{ margin: '0 0 0.75rem', fontSize: fontSizes.lg, color: colors.text }}>{title}</h3>
+      <h3 style={{ margin: `0 0 ${spacing.lg}`, fontSize: fontSizes.lg, color: colors.text }}>{title}</h3>
 
       {/* Legend */}
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: spacing.xl, marginBottom: spacing.md, flexWrap: 'wrap' }}>
         {series.map((s) => (
           <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: fontSizes.sm }}>
             <span style={{ width: 10, height: 10, borderRadius: 2, background: s.color, display: 'inline-block' }} />
@@ -61,8 +61,8 @@ function BarChart({
             const y = chartHeight - frac * chartHeight;
             return (
               <g key={frac}>
-                <line x1={50} y1={y} x2={chartWidth} y2={y} stroke="#f0f0f0" strokeWidth={1} />
-                <text x={46} y={y + 4} textAnchor="end" fontSize={10} fill="#999">
+                <line x1={50} y1={y} x2={chartWidth} y2={y} stroke={colors.borderSubtle} strokeWidth={1} />
+                <text x={46} y={y + 4} textAnchor="end" fontSize={10} fill={colors.textMuted}>
                   {formatCurrency(maxValue * frac)}
                 </text>
               </g>
@@ -100,7 +100,7 @@ function BarChart({
                   y={chartHeight + 16}
                   textAnchor="middle"
                   fontSize={10}
-                  fill="#666"
+                  fill={colors.textSecondary}
                 >
                   {label}
                 </text>
@@ -109,7 +109,7 @@ function BarChart({
           })}
 
           {/* X-axis line */}
-          <line x1={50} y1={chartHeight} x2={chartWidth} y2={chartHeight} stroke="#ccc" strokeWidth={1} />
+          <line x1={50} y1={chartHeight} x2={chartWidth} y2={chartHeight} stroke={colors.border} strokeWidth={1} />
         </svg>
       </div>
     </div>
@@ -129,9 +129,9 @@ export function ProfitStatsChart({ weeks }: ChartsProps) {
       title="Profit Statistics"
       labels={weeks.map((w) => w.weekLabel)}
       series={[
-        { label: 'Gross', color: '#1976d2', values: weeks.map((w) => w.grossAmount) },
-        { label: 'Driver Cost', color: '#f57c00', values: weeks.map((w) => w.driverCostAmount) },
-        { label: 'Profit', color: '#388e3c', values: weeks.map((w) => w.profitAmount) },
+        { label: 'Gross', color: colors.primary, values: weeks.map((w) => w.grossAmount) },
+        { label: 'Driver Cost', color: colors.orangeLight, values: weeks.map((w) => w.driverCostAmount) },
+        { label: 'Profit', color: colors.success, values: weeks.map((w) => w.profitAmount) },
       ]}
     />
   );
@@ -148,8 +148,8 @@ export function SpecialProfitStatsChart({ weeks }: ChartsProps) {
       title="Special Profit Statistics"
       labels={weeks.map((w) => w.weekLabel)}
       series={[
-        { label: 'OTR', color: '#7b1fa2', values: weeks.map((w) => w.otrAmount) },
-        { label: 'Net Profit', color: '#00897b', values: weeks.map((w) => w.netProfitAmount) },
+        { label: 'OTR', color: colors.purple, values: weeks.map((w) => w.otrAmount) },
+        { label: 'Net Profit', color: colors.teal, values: weeks.map((w) => w.netProfitAmount) },
       ]}
     />
   );

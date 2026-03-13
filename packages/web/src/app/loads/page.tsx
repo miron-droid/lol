@@ -14,7 +14,7 @@ import { LoadsTable } from './LoadsTable';
 import { ExportModal } from './ExportModal';
 import { PageShell } from '@/components/PageShell';
 import { ErrorBanner, LoadingBox, EmptyBox } from '@/components/StateBoxes';
-import { primaryBtnStyle, navBtnStyle, checkboxLabelStyle, stickyToolbarStyle, toolbarGroupStyle, bannerStyle } from '@/lib/styles';
+import { primaryBtnStyle, navBtnStyle, checkboxLabelStyle, stickyToolbarStyle, toolbarGroupStyle, bannerStyle, colors, fontSizes } from '@/lib/styles';
 
 export default function LoadsPage() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -86,9 +86,9 @@ export default function LoadsPage() {
       {/* ── Sticky Toolbar ── */}
       <div style={stickyToolbarStyle}>
         {weeksLoading ? (
-          <span style={{ color: '#888', fontSize: '0.875rem' }}>Loading weeks...</span>
+          <span style={{ color: colors.textMuted, fontSize: fontSizes.md }}>Loading weeks...</span>
         ) : weeksError ? (
-          <span style={{ color: '#d32f2f', fontSize: '0.875rem' }}>
+          <span style={{ color: colors.danger, fontSize: fontSizes.md }}>
             Week load error: {weeksError}
           </span>
         ) : (
@@ -97,7 +97,7 @@ export default function LoadsPage() {
 
         <div style={toolbarGroupStyle}>
           {canArchive && (
-            <label style={{ ...checkboxLabelStyle, fontSize: '0.8125rem' }}>
+            <label style={{ ...checkboxLabelStyle, fontSize: fontSizes.base }}>
               <input
                 type="checkbox"
                 checked={showArchived}
@@ -147,7 +147,7 @@ export default function LoadsPage() {
           <span>
             <strong>{selectedWeek.label}</strong> &mdash; {selectedWeek.startDate} to {selectedWeek.endDate}
           </span>
-          <span style={{ fontWeight: 500, fontSize: '0.8125rem' }}>
+          <span style={{ fontWeight: 500, fontSize: fontSizes.base }}>
             {loadsLoading ? 'Loading...' : (
               showArchived
                 ? `${activeCount} active, ${archivedCount} archived`

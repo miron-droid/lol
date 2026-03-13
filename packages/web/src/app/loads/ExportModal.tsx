@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { API_PREFIX } from '@lol/shared';
 import type { WeekDto } from '@lol/shared';
 import { getErrorMessage } from '@/lib/errors';
-import { labelStyle, inputStyle, checkboxLabelStyle, overlayStyle, modalStyle, primaryBtnStyle, secondaryBtnStyle, loadingBtnStyle, colors, fontSizes, radii } from '@/lib/styles';
+import { labelStyle, inputStyle, checkboxLabelStyle, overlayStyle, modalStyle, primaryBtnStyle, secondaryBtnStyle, loadingBtnStyle, validationErrorStyle, formActionsStyle, sectionHeadingStyle, spacing } from '@/lib/styles';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -96,26 +96,16 @@ export function ExportModal({ weeks, selectedWeekId, onClose }: ExportModalProps
       <div
         style={{ ...modalStyle, width: 420, maxWidth: '90vw' }}
       >
-        <h2 style={{ margin: '0 0 1.25rem', fontSize: fontSizes.xl }}>Export Loads</h2>
+        <h2 style={{ ...sectionHeadingStyle, marginBottom: spacing.xxl }}>Export Loads</h2>
 
         {error && (
-          <div
-            style={{
-              padding: '0.5rem 0.75rem',
-              marginBottom: '1rem',
-              background: colors.dangerBg,
-              border: `1px solid ${colors.dangerBorder}`,
-              borderRadius: radii.md,
-              fontSize: '0.8125rem',
-              color: colors.danger,
-            }}
-          >
+          <div style={validationErrorStyle}>
             {error}
           </div>
         )}
 
         {/* Week selector */}
-        <div style={{ marginBottom: '1rem' }}>
+        <div style={{ marginBottom: spacing.xl }}>
           <label style={labelStyle}>Week</label>
           <select
             style={inputStyle}
@@ -132,7 +122,7 @@ export function ExportModal({ weeks, selectedWeekId, onClose }: ExportModalProps
         </div>
 
         {/* Payment filter */}
-        <div style={{ marginBottom: '1rem' }}>
+        <div style={{ marginBottom: spacing.xl }}>
           <label style={labelStyle}>Payment Filter</label>
           <select
             style={inputStyle}
@@ -148,7 +138,7 @@ export function ExportModal({ weeks, selectedWeekId, onClose }: ExportModalProps
         </div>
 
         {/* Checkboxes */}
-        <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div style={{ marginBottom: spacing.xl, display: 'flex', flexDirection: 'column', gap: spacing.md }}>
           <label style={checkboxLabelStyle}>
             <input
               type="checkbox"
@@ -168,7 +158,7 @@ export function ExportModal({ weeks, selectedWeekId, onClose }: ExportModalProps
         </div>
 
         {/* Actions */}
-        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+        <div style={formActionsStyle}>
           <button
             type="button"
             onClick={onClose}

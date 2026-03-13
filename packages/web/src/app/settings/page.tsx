@@ -23,6 +23,8 @@ import {
   thAction,
   tdAction,
   zebraRowProps,
+  colors,
+  spacing,
 } from '@/lib/styles';
 import { ErrorBanner, LoadingBox, EmptyBox } from '@/components/StateBoxes';
 import { PageShell } from '@/components/PageShell';
@@ -240,12 +242,12 @@ function RulesList({
                   <td style={tdStyle}>{r.tierCount}</td>
                   <td style={tdStyle}>{r.createdByName}</td>
                   <td style={tdAction}>
-                    <div style={{ display: 'flex', gap: '0.375rem', justifyContent: 'center' }}>
+                    <div style={{ display: 'flex', gap: spacing.sm, justifyContent: 'center' }}>
                       <button onClick={() => onEdit(r.id)} style={smallBtnStyle}>Edit</button>
                       {r.isActive ? (
-                        <button onClick={() => onDeactivate(r.id)} style={{ ...smallBtnStyle, color: '#d32f2f' }}>Deactivate</button>
+                        <button onClick={() => onDeactivate(r.id)} style={{ ...smallBtnStyle, color: colors.danger }}>Deactivate</button>
                       ) : (
-                        <button onClick={() => onActivate(r.id)} style={{ ...smallBtnStyle, color: '#2e7d32' }}>Activate</button>
+                        <button onClick={() => onActivate(r.id)} style={{ ...smallBtnStyle, color: colors.success }}>Activate</button>
                       )}
                     </div>
                   </td>
