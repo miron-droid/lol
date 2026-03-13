@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { API_PREFIX } from '@lol/shared';
 import type { WeekDto } from '@lol/shared';
 import { getErrorMessage } from '@/lib/errors';
-import { labelStyle, inputStyle, checkboxLabelStyle } from '@/lib/styles';
+import { labelStyle, inputStyle, checkboxLabelStyle, overlayStyle, modalStyle, primaryBtnStyle, secondaryBtnStyle, loadingBtnStyle, colors, fontSizes, radii } from '@/lib/styles';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -90,39 +90,24 @@ export function ExportModal({ weeks, selectedWeekId, onClose }: ExportModalProps
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.4)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
+      style={overlayStyle}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        style={{
-          background: '#fff',
-          borderRadius: 8,
-          padding: '1.5rem',
-          width: 420,
-          maxWidth: '90vw',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
-        }}
+        style={{ ...modalStyle, width: 420, maxWidth: '90vw' }}
       >
-        <h2 style={{ margin: '0 0 1.25rem', fontSize: '1.125rem' }}>Export Loads</h2>
+        <h2 style={{ margin: '0 0 1.25rem', fontSize: fontSizes.xl }}>Export Loads</h2>
 
         {error && (
           <div
             style={{
               padding: '0.5rem 0.75rem',
               marginBottom: '1rem',
-              background: '#fff5f5',
-              border: '1px solid #ffcdd2',
-              borderRadius: 4,
+              background: colors.dangerBg,
+              border: `1px solid ${colors.dangerBorder}`,
+              borderRadius: radii.md,
               fontSize: '0.8125rem',
-              color: '#d32f2f',
+              color: colors.danger,
             }}
           >
             {error}
@@ -187,14 +172,7 @@ export function ExportModal({ weeks, selectedWeekId, onClose }: ExportModalProps
           <button
             type="button"
             onClick={onClose}
-            style={{
-              padding: '0.5rem 1.25rem',
-              background: '#fff',
-              border: '1px solid #ccc',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-            }}
+            style={secondaryBtnStyle}
           >
             Cancel
           </button>
@@ -202,16 +180,7 @@ export function ExportModal({ weeks, selectedWeekId, onClose }: ExportModalProps
             type="button"
             onClick={handleExport}
             disabled={exporting}
-            style={{
-              padding: '0.5rem 1.25rem',
-              background: exporting ? '#999' : '#1976d2',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 4,
-              cursor: exporting ? 'default' : 'pointer',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-            }}
+            style={loadingBtnStyle(primaryBtnStyle, exporting)}
           >
             {exporting ? 'Exporting...' : 'Download CSV'}
           </button>

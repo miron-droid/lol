@@ -2,6 +2,7 @@
 
 import type { LoadDto } from '@lol/shared';
 import { LoadStatus } from '@lol/shared';
+import { thStyle, tdStyle, tdRight, smallBtnStyle, tableWrapperStyle, tableStyle, badgeStyle, tagStyle, thAction, tdAction, colors, zebraRowProps, fmt } from '@/lib/styles';
 
 interface LoadsTableProps {
   loads: LoadDto[];
@@ -18,17 +19,13 @@ const STATUS_LABEL: Record<LoadStatus, string> = {
   [LoadStatus.Cancelled]: 'Cancelled',
 };
 
-const STATUS_COLOR: Record<LoadStatus, string> = {
-  [LoadStatus.NotPickedUp]: '#9e9e9e',
-  [LoadStatus.InTransit]: '#1976d2',
-  [LoadStatus.Delivered]: '#388e3c',
-  [LoadStatus.Completed]: '#2e7d32',
-  [LoadStatus.Cancelled]: '#d32f2f',
+const STATUS_BADGE_VARIANT: Record<LoadStatus, 'muted' | 'info' | 'success' | 'danger'> = {
+  [LoadStatus.NotPickedUp]: 'muted',
+  [LoadStatus.InTransit]: 'info',
+  [LoadStatus.Delivered]: 'success',
+  [LoadStatus.Completed]: 'success',
+  [LoadStatus.Cancelled]: 'danger',
 };
-
-function formatCurrency(value: number): string {
-  return '$' + Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
 function FlagCell({ value }: { value: boolean }) {
   return (
@@ -38,33 +35,10 @@ function FlagCell({ value }: { value: boolean }) {
   );
 }
 
-const thStyle: React.CSSProperties = {
-  padding: '0.5rem 0.75rem',
-  textAlign: 'left',
-  borderBottom: '2px solid #e0e0e0',
-  fontSize: '0.75rem',
-  fontWeight: 600,
-  textTransform: 'uppercase',
-  color: '#666',
-  whiteSpace: 'nowrap',
-  position: 'sticky',
-  top: 0,
-  background: '#fafafa',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '0.5rem 0.75rem',
-  borderBottom: '1px solid #f0f0f0',
-  fontSize: '0.8125rem',
-  whiteSpace: 'nowrap',
-};
-
-const tdRight: React.CSSProperties = { ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
-
 export function LoadsTable({ loads, onEdit, onArchive, onUnarchive }: LoadsTableProps) {
   return (
-    <div style={{ overflowX: 'auto', border: '1px solid #e0e0e0', borderRadius: 6 }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1300 }}>
+    <div style={tableWrapperStyle}>
+      <table style={{ ...tableStyle, minWidth: 1300 }}>
         <thead>
           <tr>
             <th style={thStyle}>SYL #</th>
@@ -83,38 +57,25 @@ export function LoadsTable({ loads, onEdit, onArchive, onUnarchive }: LoadsTable
             <th style={{ ...thStyle, textAlign: 'center' }}>DP</th>
             <th style={{ ...thStyle, textAlign: 'center' }}>Fact</th>
             <th style={{ ...thStyle, textAlign: 'center' }}>Paid</th>
-            <th style={thStyle}></th>
+            <th style={thAction}></th>
           </tr>
         </thead>
         <tbody>
-          {loads.map((load) => {
+          {loads.map((load, idx) => {
             const isArchived = !!load.archivedAt;
+            const zebra = zebraRowProps(idx, isArchived ? '#fff8e1' : undefined);
             return (
             <tr
               key={load.id}
-              style={{ cursor: 'pointer', opacity: isArchived ? 0.6 : 1 }}
+              style={{ ...zebra.style, cursor: 'pointer', opacity: isArchived ? 0.6 : 1 }}
               onClick={() => onEdit(load.id)}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLTableRowElement).style.background = isArchived ? '#fff8e1' : '#f5f9ff';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLTableRowElement).style.background = '';
-              }}
+              onMouseEnter={zebra.onMouseEnter}
+              onMouseLeave={zebra.onMouseLeave}
             >
               <td style={{ ...tdStyle, fontWeight: 600 }}>
                 {load.sylNumber}
                 {isArchived && (
-                  <span style={{
-                    marginLeft: 6,
-                    display: 'inline-block',
-                    padding: '1px 6px',
-                    borderRadius: 3,
-                    fontSize: '0.625rem',
-                    fontWeight: 700,
-                    background: '#ff9800',
-                    color: '#fff',
-                    verticalAlign: 'middle',
-                  }}>
+                  <span style={{ marginLeft: 6, display: 'inline-block', verticalAlign: 'middle', ...tagStyle('solidWarning') }}>
                     ARCHIVED
                   </span>
                 )}
@@ -129,26 +90,20 @@ export function LoadsTable({ loads, onEdit, onArchive, onUnarchive }: LoadsTable
               <td style={{ ...tdStyle, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {load.toAddress}
               </td>
-              <td style={tdRight}>{formatCurrency(load.grossAmount)}</td>
-              <td style={tdRight}>{formatCurrency(load.driverCostAmount)}</td>
-              <td style={{ ...tdRight, color: load.profitAmount >= 0 ? '#2e7d32' : '#d32f2f' }}>
-                {formatCurrency(load.profitAmount)}
+              <td style={tdRight}>{fmt(load.grossAmount)}</td>
+              <td style={tdRight}>{fmt(load.driverCostAmount)}</td>
+              <td style={{ ...tdRight, color: load.profitAmount >= 0 ? colors.success : colors.danger }}>
+                {fmt(load.profitAmount)}
               </td>
-              <td style={{ ...tdRight, color: load.profitPercent >= 0 ? '#2e7d32' : '#d32f2f' }}>
+              <td style={{ ...tdRight, color: load.profitPercent >= 0 ? colors.success : colors.danger }}>
                 {Number(load.profitPercent).toFixed(1)}%
               </td>
-              <td style={tdRight}>{formatCurrency(load.otrAmount)}</td>
-              <td style={{ ...tdRight, color: load.netProfitAmount >= 0 ? '#2e7d32' : '#d32f2f' }}>
-                {formatCurrency(load.netProfitAmount)}
+              <td style={tdRight}>{fmt(load.otrAmount)}</td>
+              <td style={{ ...tdRight, color: load.netProfitAmount >= 0 ? colors.success : colors.danger }}>
+                {fmt(load.netProfitAmount)}
               </td>
               <td style={tdStyle}>
-                <span
-                  style={{
-                    color: STATUS_COLOR[load.loadStatus] || '#666',
-                    fontWeight: 500,
-                    fontSize: '0.75rem',
-                  }}
-                >
+                <span style={badgeStyle(STATUS_BADGE_VARIANT[load.loadStatus])}>
                   {STATUS_LABEL[load.loadStatus] || load.loadStatus}
                 </span>
               </td>
@@ -156,21 +111,14 @@ export function LoadsTable({ loads, onEdit, onArchive, onUnarchive }: LoadsTable
               <td style={{ ...tdStyle, textAlign: 'center' }}><FlagCell value={load.directPaymentFlag} /></td>
               <td style={{ ...tdStyle, textAlign: 'center' }}><FlagCell value={load.factoringFlag} /></td>
               <td style={{ ...tdStyle, textAlign: 'center' }}><FlagCell value={load.driverPaidFlag} /></td>
-              <td style={tdStyle}>
-                <div style={{ display: 'flex', gap: '0.25rem' }}>
+              <td style={tdAction}>
+                <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       onEdit(load.id);
                     }}
-                    style={{
-                      padding: '0.25rem 0.5rem',
-                      fontSize: '0.75rem',
-                      background: '#fff',
-                      border: '1px solid #ccc',
-                      borderRadius: 3,
-                      cursor: 'pointer',
-                    }}
+                    style={smallBtnStyle}
                   >
                     {isArchived ? 'View' : 'Edit'}
                   </button>
@@ -181,13 +129,10 @@ export function LoadsTable({ loads, onEdit, onArchive, onUnarchive }: LoadsTable
                         onArchive(load.id);
                       }}
                       style={{
-                        padding: '0.25rem 0.5rem',
-                        fontSize: '0.75rem',
-                        background: '#fff8e1',
-                        border: '1px solid #ffb74d',
-                        borderRadius: 3,
-                        cursor: 'pointer',
-                        color: '#e65100',
+                        ...smallBtnStyle,
+                        background: colors.warningBg,
+                        borderColor: '#ffb74d',
+                        color: colors.orange,
                       }}
                     >
                       Archive
@@ -200,13 +145,10 @@ export function LoadsTable({ loads, onEdit, onArchive, onUnarchive }: LoadsTable
                         onUnarchive(load.id);
                       }}
                       style={{
-                        padding: '0.25rem 0.5rem',
-                        fontSize: '0.75rem',
-                        background: '#e8f5e9',
-                        border: '1px solid #81c784',
-                        borderRadius: 3,
-                        cursor: 'pointer',
-                        color: '#2e7d32',
+                        ...smallBtnStyle,
+                        background: colors.successBg,
+                        borderColor: colors.successBorder,
+                        color: colors.success,
                       }}
                     >
                       Unarchive

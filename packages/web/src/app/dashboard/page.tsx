@@ -8,7 +8,7 @@ import { apiFetch } from '@/lib/api';
 import { ProfitStatsChart, SpecialProfitStatsChart } from './DashboardCharts';
 import { PageShell } from '@/components/PageShell';
 import { ErrorBanner, LoadingBox, EmptyBox } from '@/components/StateBoxes';
-import { fmt } from '@/lib/styles';
+import { fmt, tabBtnStyle, cardStyle, colors, fontSizes } from '@/lib/styles';
 
 // ── KPI card ─────────────────────────────────────────────────
 function KpiCard({
@@ -23,18 +23,15 @@ function KpiCard({
   return (
     <div
       style={{
-        background: '#fff',
-        borderRadius: 8,
-        border: '1px solid #e0e0e0',
-        padding: '1rem 1.25rem',
+        ...cardStyle,
         flex: '1 1 160px',
         minWidth: 140,
       }}
     >
-      <div style={{ fontSize: '0.75rem', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>
+      <div style={{ fontSize: fontSizes.sm, color: colors.textMuted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: 4 }}>
         {label}
       </div>
-      <div style={{ fontSize: '1.375rem', fontWeight: 700, color: color || '#222', fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ fontSize: '1.375rem', fontWeight: 700, color: color || colors.text, fontVariantNumeric: 'tabular-nums' }}>
         {value}
       </div>
     </div>
@@ -112,25 +109,16 @@ export default function DashboardPage() {
 
   // ── Main render ────────────────────────────────────────────
   return (
-    <PageShell breadcrumb="/ Dashboard" user={user} onLogout={logout} nav={[{label:'Home',href:'/'},{label:'Loads',href:'/loads'}]}>
+    <PageShell breadcrumb="/ Dashboard" user={user} onLogout={logout} nav={[{label:'Home',href:'/'},{label:'Loads',href:'/loads'}]} title="Dashboard" subtitle="Weekly profit overview and trends">
 
       {/* Range selector */}
       <div style={{ marginBottom: '1.25rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-        <span style={{ fontSize: '0.8125rem', color: '#666', fontWeight: 500 }}>Range:</span>
+        <span style={{ fontSize: fontSizes.base, color: colors.textSecondary, fontWeight: 500 }}>Range:</span>
         {RANGE_OPTIONS.map((opt) => (
           <button
             key={opt.value}
             onClick={() => setRange(opt.value)}
-            style={{
-              padding: '0.375rem 0.75rem',
-              fontSize: '0.8125rem',
-              background: range === opt.value ? '#1976d2' : '#fff',
-              color: range === opt.value ? '#fff' : '#333',
-              border: range === opt.value ? '1px solid #1976d2' : '1px solid #ccc',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontWeight: range === opt.value ? 600 : 400,
-            }}
+            style={tabBtnStyle(range === opt.value)}
           >
             {opt.label}
           </button>

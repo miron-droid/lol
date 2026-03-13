@@ -9,7 +9,29 @@ import { usePermissions } from '@/lib/permissions';
 import { useWeeks } from '@/lib/use-weeks';
 import { apiFetch } from '@/lib/api';
 import { getErrorMessage } from '@/lib/errors';
-import { thStyle, tdStyle, smallBtnStyle, fmt, fmtDate } from '@/lib/styles';
+import {
+  thStyle,
+  tdStyle,
+  smallBtnStyle,
+  fmt,
+  fmtDate,
+  stickyToolbarStyle,
+  toolbarGroupStyle,
+  badgeStyle,
+  tagStyle,
+  bannerStyle,
+  actionBtnStyle,
+  accessDeniedStyle,
+  accessDeniedSubtextStyle,
+  tableWrapperStyle,
+  tableStyle,
+  totalRowStyle,
+  thAction,
+  tdAction,
+  zebraRowProps,
+  colors,
+  inputStyle,
+} from '@/lib/styles';
 import { ErrorBanner, LoadingBox, EmptyBox } from '@/components/StateBoxes';
 import { PageShell } from '@/components/PageShell';
 import { WeekSwitcher } from '../loads/WeekSwitcher';
@@ -218,35 +240,21 @@ export default function SalaryPage() {
     }
   };
 
-  if (authLoading) return <main style={{ padding: '2rem' }}>Loading...</main>;
+  if (authLoading) return <main style={{ padding: '2rem' }}><LoadingBox message="Authenticating..." /></main>;
   if (!user) return null;
 
   if (!allowed(Action.SalaryPreview)) {
     return (
       <PageShell breadcrumb="/ Salary" user={user} onLogout={logout} nav={[{label:'Home',href:'/'},{label:'Loads',href:'/loads'}]}>
-        <div style={{
-          padding: '2rem',
-          textAlign: 'center',
-          color: '#d32f2f',
-          background: '#fff5f5',
-          borderRadius: 6,
-          border: '1px solid #ffcdd2',
-        }}>
+        <div style={accessDeniedStyle}>
           <strong>Access Denied</strong>
-          <p style={{ margin: '0.5rem 0 0', color: '#666', fontSize: '0.875rem' }}>
+          <p style={accessDeniedSubtextStyle}>
             You do not have permission to view salary data. Contact an administrator if you need access.
           </p>
         </div>
       </PageShell>
     );
   }
-
-  const statusColor: Record<string, { bg: string; fg: string; label: string }> = {
-    open: { bg: '#fff8e1', fg: '#f57f17', label: 'Open' },
-    generated: { bg: '#e8f5e9', fg: '#2e7d32', label: 'Generated' },
-    frozen: { bg: '#e3f2fd', fg: '#0d47a1', label: 'Frozen' },
-  };
-  const st = statusColor[weekState?.status ?? 'open'];
 
   return (
     <PageShell
@@ -258,9 +266,11 @@ export default function SalaryPage() {
         { label: 'Loads', href: '/loads' },
         { label: 'Settings', href: '/settings' },
       ]}
+      title="Salary Preview"
+      subtitle={selectedWeek ? `${selectedWeek.label} — ${selectedWeek.startDate} to ${selectedWeek.endDate}` : undefined}
     >
-      {/* ── Toolbar ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+      {/* ── Sticky Toolbar ── */}
+      <div style={stickyToolbarStyle}>
         {weeksLoading ? (
           <span style={{ color: '#888', fontSize: '0.875rem' }}>Loading weeks...</span>
         ) : weeksError ? (
@@ -269,18 +279,18 @@ export default function SalaryPage() {
           <WeekSwitcher weeks={weeks} selectedWeek={selectedWeek} onSelect={selectWeek} />
         )}
 
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <div style={toolbarGroupStyle}>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name..."
-            style={{ padding: '0.375rem 0.5rem', border: '1px solid #ccc', borderRadius: 4, fontSize: '0.875rem', width: 180 }}
+            style={{ ...inputStyle, width: 180 }}
           />
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as Filter)}
-            style={{ padding: '0.375rem 0.5rem', border: '1px solid #ccc', borderRadius: 4, fontSize: '0.875rem', background: '#fff' }}
+            style={{ ...inputStyle, width: 'auto' }}
           >
             <option value="all">All</option>
             <option value="with_salary">With Salary</option>
@@ -291,32 +301,17 @@ export default function SalaryPage() {
 
       {/* ── Week state banner ── */}
       {selectedWeek && weekState && (
-        <div style={{
-          padding: '0.625rem 0.75rem',
-          background: st.bg,
-          borderRadius: 4,
-          fontSize: '0.8125rem',
-          color: '#444',
-          marginBottom: '1rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          border: `1px solid ${st.fg}33`,
-        }}>
+        <div style={bannerStyle(weekState.status === 'frozen' ? 'info' : weekState.status === 'generated' ? 'success' : 'warning')}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <span>
               <strong>{selectedWeek.label}</strong> &mdash; {selectedWeek.startDate} to {selectedWeek.endDate}
             </span>
-            <span style={{
-              display: 'inline-block',
-              padding: '0.125rem 0.625rem',
-              borderRadius: 12,
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              background: st.fg,
-              color: '#fff',
-            }}>
-              {st.label}
+            <span style={
+              weekState.status === 'generated' ? tagStyle('solidSuccess') :
+              weekState.status === 'open' ? tagStyle('solidWarning') :
+              tagStyle('solidInfo')
+            }>
+              {weekState.status === 'generated' ? 'Generated' : weekState.status === 'open' ? 'Open' : 'Frozen'}
             </span>
             {weekState.generatedByName && (
               <span style={{ fontSize: '0.75rem', color: '#666' }}>
@@ -343,7 +338,7 @@ export default function SalaryPage() {
                 disabled={actionLoading}
                 style={{
                   ...actionBtnStyle,
-                  background: actionLoading ? '#e0e0e0' : '#ff9800',
+                  background: actionLoading ? '#e0e0e0' : colors.warning,
                   color: '#fff',
                   border: 'none',
                 }}
@@ -359,7 +354,7 @@ export default function SalaryPage() {
                 disabled={actionLoading}
                 style={{
                   ...actionBtnStyle,
-                  background: actionLoading ? '#e0e0e0' : '#0d47a1',
+                  background: actionLoading ? '#e0e0e0' : colors.primaryDark,
                   color: '#fff',
                   border: 'none',
                 }}
@@ -375,7 +370,7 @@ export default function SalaryPage() {
                 disabled={actionLoading}
                 style={{
                   ...actionBtnStyle,
-                  background: actionLoading ? '#e0e0e0' : '#d32f2f',
+                  background: actionLoading ? '#e0e0e0' : colors.danger,
                   color: '#fff',
                   border: 'none',
                 }}
@@ -402,28 +397,8 @@ export default function SalaryPage() {
 
       {/* ── Frozen notice ── */}
       {isFrozen && (
-        <div style={{
-          padding: '0.5rem 0.75rem',
-          background: '#e3f2fd',
-          border: '1px solid #90caf9',
-          borderRadius: 4,
-          marginBottom: '1rem',
-          fontSize: '0.8125rem',
-          color: '#0d47a1',
-          fontWeight: 500,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-        }}>
-          <span style={{
-            display: 'inline-block',
-            padding: '1px 8px',
-            borderRadius: 3,
-            fontSize: '0.625rem',
-            fontWeight: 700,
-            background: '#0d47a1',
-            color: '#fff',
-          }}>
+        <div style={bannerStyle('info')}>
+          <span style={tagStyle('solidInfo')}>
             READ ONLY
           </span>
           <span>
@@ -467,15 +442,14 @@ export default function SalaryPage() {
                   <tr key={log.id} style={{ borderBottom: '1px solid #eee' }}>
                     <td style={{ padding: '0.375rem 0.75rem', whiteSpace: 'nowrap' }}>{fmtDate(log.createdAt)}</td>
                     <td style={{ padding: '0.375rem 0.75rem' }}>
-                      <span style={{
-                        display: 'inline-block',
-                        padding: '0.0625rem 0.375rem',
-                        borderRadius: 4,
-                        fontSize: '0.6875rem',
-                        fontWeight: 600,
-                        background: auditActionColor[log.action]?.bg ?? '#eee',
-                        color: auditActionColor[log.action]?.fg ?? '#333',
-                      }}>
+                      <span style={
+                        log.action === 'generate' ? badgeStyle('success') :
+                        log.action === 'recalculate' ? badgeStyle('warning') :
+                        log.action === 'freeze' ? badgeStyle('info') :
+                        log.action === 'unfreeze' ? badgeStyle('danger') :
+                        log.action === 'adjustment' ? badgeStyle('purple') :
+                        badgeStyle('muted')
+                      }>
                         {log.action}
                       </span>
                     </td>
@@ -491,14 +465,14 @@ export default function SalaryPage() {
 
       {/* ── Content ── */}
       {loading ? (
-        <LoadingBox message="Loading salary data..." />
+        <LoadingBox message="Loading salary data..." subtitle="Calculating preview for all dispatchers" />
       ) : rows.length === 0 ? (
         <EmptyBox title="No salary data" subtitle="No dispatchers with loads found for this week, or no active salary rule configured." />
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+        <div style={tableWrapperStyle}>
+          <table style={tableStyle}>
             <thead>
-              <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
+              <tr>
                 <th style={thStyle}>Dispatcher</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Gross Profit</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>%</th>
@@ -508,43 +482,37 @@ export default function SalaryPage() {
                 <th style={{ ...thStyle, textAlign: 'right' }}>Total</th>
                 <th style={{ ...thStyle, textAlign: 'center' }}>Loads</th>
                 <th style={{ ...thStyle, textAlign: 'center' }}>Status</th>
-                <th style={thStyle}>Actions</th>
+                <th style={thAction}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredRows.map((r) => (
-                <tr key={r.dispatcherId} style={{ borderBottom: '1px solid #e0e0e0' }}>
+              {filteredRows.map((r, idx) => {
+                const zebra = zebraRowProps(idx);
+                return (
+                <tr key={r.dispatcherId} style={zebra.style} onMouseEnter={zebra.onMouseEnter} onMouseLeave={zebra.onMouseLeave}>
                   <td style={tdStyle}>
                     <span style={{ fontWeight: 500 }}>{r.dispatcherName}</span>
                   </td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'monospace' }}>${fmt(r.weeklyGrossProfit)}</td>
+                  <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(r.weeklyGrossProfit)}</td>
                   <td style={{ ...tdStyle, textAlign: 'right' }}>{r.appliedPercent}%</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'monospace' }}>${fmt(r.baseSalary)}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'monospace', color: r.totalOther !== 0 ? '#7b1fa2' : '#ccc' }}>
-                    ${fmt(r.totalOther)}
+                  <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(r.baseSalary)}</td>
+                  <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: r.totalOther !== 0 ? '#7b1fa2' : '#ccc' }}>
+                    {fmt(r.totalOther)}
                   </td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'monospace', color: r.totalBonus !== 0 ? '#2e7d32' : '#ccc' }}>
-                    ${fmt(r.totalBonus)}
+                  <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: r.totalBonus !== 0 ? '#2e7d32' : '#ccc' }}>
+                    {fmt(r.totalBonus)}
                   </td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'monospace', fontWeight: 600 }}>
-                    ${fmt(r.totalSalary)}
+                  <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
+                    {fmt(r.totalSalary)}
                   </td>
                   <td style={{ ...tdStyle, textAlign: 'center' }}>{r.loadCount}</td>
                   <td style={{ ...tdStyle, textAlign: 'center' }}>
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '0.125rem 0.5rem',
-                      borderRadius: 12,
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      background: r.isGenerated ? '#e8f5e9' : '#fff8e1',
-                      color: r.isGenerated ? '#2e7d32' : '#f57f17',
-                    }}>
+                    <span style={r.isGenerated ? badgeStyle('success') : badgeStyle('warning')}>
                       {r.isGenerated ? 'Generated' : 'Pending'}
                     </span>
                   </td>
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', gap: '0.375rem' }}>
+                  <td style={tdAction}>
+                    <div style={{ display: 'flex', gap: '0.375rem', justifyContent: 'center' }}>
                       {canMutate && (
                         <button
                           onClick={() => !isFrozen && setAdjustTarget(r)}
@@ -584,18 +552,19 @@ export default function SalaryPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
             {/* ── Totals row ── */}
             <tfoot>
-              <tr style={{ background: '#f9f9f9', fontWeight: 600, borderTop: '2px solid #ddd' }}>
+              <tr style={totalRowStyle}>
                 <td style={tdStyle}>Totals ({filteredRows.length})</td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'monospace' }}>${fmt(totals.profit)}</td>
+                <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(totals.profit)}</td>
                 <td style={tdStyle}></td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'monospace' }}>${fmt(totals.base)}</td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'monospace' }}>${fmt(totals.other)}</td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'monospace' }}>${fmt(totals.bonus)}</td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'monospace' }}>${fmt(totals.total)}</td>
+                <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(totals.base)}</td>
+                <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(totals.other)}</td>
+                <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(totals.bonus)}</td>
+                <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(totals.total)}</td>
                 <td style={tdStyle}></td>
                 <td style={tdStyle}></td>
                 <td style={tdStyle}></td>
@@ -617,22 +586,3 @@ export default function SalaryPage() {
     </PageShell>
   );
 }
-
-// ── Audit action colors ──
-const auditActionColor: Record<string, { bg: string; fg: string }> = {
-  generate: { bg: '#e8f5e9', fg: '#2e7d32' },
-  recalculate: { bg: '#fff3e0', fg: '#e65100' },
-  freeze: { bg: '#e3f2fd', fg: '#0d47a1' },
-  unfreeze: { bg: '#fce4ec', fg: '#c62828' },
-  adjustment: { bg: '#f3e5f5', fg: '#6a1b9a' },
-};
-
-// ── Styles ──
-
-const actionBtnStyle: React.CSSProperties = {
-  padding: '0.3rem 0.625rem',
-  borderRadius: 4,
-  cursor: 'pointer',
-  fontSize: '0.75rem',
-  fontWeight: 600,
-};

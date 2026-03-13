@@ -10,6 +10,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { StatementModule } from './statement/statement.module';
 import { SalaryRuleModule } from './salary-rule/salary-rule.module';
 import { SalaryModule } from './salary/salary.module';
+import { MasterDataModule } from './master-data/master-data.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { SalaryModule } from './salary/salary.module';
     StatementModule,
     SalaryRuleModule,
     SalaryModule,
+    MasterDataModule,
   ],
 })
 export class AppModule {}

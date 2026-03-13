@@ -8,7 +8,22 @@ import { useAuth } from '@/lib/auth';
 import { usePermissions } from '@/lib/permissions';
 import { apiFetch } from '@/lib/api';
 import { getErrorMessage } from '@/lib/errors';
-import { primaryBtnStyle, smallBtnStyle, thStyle, tdStyle } from '@/lib/styles';
+import {
+  primaryBtnStyle,
+  smallBtnStyle,
+  thStyle,
+  tdStyle,
+  tableWrapperStyle,
+  tableStyle,
+  badgeStyle,
+  accessDeniedStyle,
+  accessDeniedSubtextStyle,
+  stickyToolbarStyle,
+  sectionHeadingStyle,
+  thAction,
+  tdAction,
+  zebraRowProps,
+} from '@/lib/styles';
 import { ErrorBanner, LoadingBox, EmptyBox } from '@/components/StateBoxes';
 import { PageShell } from '@/components/PageShell';
 import { SalaryRuleEditor } from './SalaryRuleEditor';
@@ -107,7 +122,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (authLoading) return <main style={{ padding: '2rem' }}>Loading...</main>;
+  if (authLoading) return <main style={{ padding: '2rem' }}><LoadingBox message="Authenticating..." /></main>;
   if (!user) return null;
 
   if (!allowed(Action.SalaryRulesRead)) {
@@ -118,16 +133,9 @@ export default function SettingsPage() {
         onLogout={logout}
         nav={[{label:'Home',href:'/'},{label:'Loads',href:'/loads'}]}
       >
-        <div style={{
-          padding: '2rem',
-          textAlign: 'center',
-          color: '#d32f2f',
-          background: '#fff5f5',
-          borderRadius: 6,
-          border: '1px solid #ffcdd2',
-        }}>
+        <div style={accessDeniedStyle}>
           <strong>Access Denied</strong>
-          <p style={{ margin: '0.5rem 0 0', color: '#666', fontSize: '0.875rem' }}>
+          <p style={accessDeniedSubtextStyle}>
             You do not have permission to view salary rule settings. Contact an administrator if you need access.
           </p>
         </div>
@@ -141,6 +149,8 @@ export default function SettingsPage() {
       user={user}
       onLogout={logout}
       nav={[{label:'Home',href:'/'},{label:'Loads',href:'/loads'}]}
+      title="Settings"
+      subtitle="Manage salary rules and system configuration"
     >
       {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
 
@@ -186,52 +196,51 @@ function RulesList({
 }) {
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2 style={{ margin: 0, fontSize: '1.125rem' }}>Salary Rule Sets</h2>
+      <div style={stickyToolbarStyle}>
+        <h2 style={sectionHeadingStyle}>Salary Rule Sets</h2>
         <button onClick={onCreate} style={primaryBtnStyle}>+ New Rule Set</button>
       </div>
 
       {loading ? (
-        <LoadingBox />
+        <LoadingBox message="Loading rules..." subtitle="Fetching salary rule configurations" />
       ) : rules.length === 0 ? (
-        <EmptyBox title="No salary rule sets configured." subtitle="Create a rule set to define dispatcher salary brackets." />
+        <EmptyBox
+          title="No salary rule sets configured"
+          subtitle="Create a rule set to define dispatcher salary brackets."
+          actionLabel="+ New Rule Set"
+          onAction={onCreate}
+        />
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+        <div style={tableWrapperStyle}>
+          <table style={tableStyle}>
             <thead>
-              <tr style={{ background: '#f5f5f5', textAlign: 'left' }}>
+              <tr>
                 <th style={thStyle}>Name</th>
                 <th style={thStyle}>Version</th>
                 <th style={thStyle}>Status</th>
                 <th style={thStyle}>Effective From</th>
                 <th style={thStyle}>Tiers</th>
                 <th style={thStyle}>Created By</th>
-                <th style={thStyle}>Actions</th>
+                <th style={thAction}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {rules.map((r) => (
-                <tr key={r.id} style={{ borderBottom: '1px solid #e0e0e0' }}>
+              {rules.map((r, idx) => {
+                const zebra = zebraRowProps(idx);
+                return (
+                <tr key={r.id} style={zebra.style} onMouseEnter={zebra.onMouseEnter} onMouseLeave={zebra.onMouseLeave}>
                   <td style={tdStyle}>{r.name}</td>
                   <td style={tdStyle}>v{r.version}</td>
                   <td style={tdStyle}>
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '0.125rem 0.5rem',
-                      borderRadius: 12,
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      background: r.isActive ? '#e8f5e9' : '#f5f5f5',
-                      color: r.isActive ? '#2e7d32' : '#888',
-                    }}>
+                    <span style={r.isActive ? badgeStyle('success') : badgeStyle('muted')}>
                       {r.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td style={tdStyle}>{r.effectiveFrom}</td>
                   <td style={tdStyle}>{r.tierCount}</td>
                   <td style={tdStyle}>{r.createdByName}</td>
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', gap: '0.375rem' }}>
+                  <td style={tdAction}>
+                    <div style={{ display: 'flex', gap: '0.375rem', justifyContent: 'center' }}>
                       <button onClick={() => onEdit(r.id)} style={smallBtnStyle}>Edit</button>
                       {r.isActive ? (
                         <button onClick={() => onDeactivate(r.id)} style={{ ...smallBtnStyle, color: '#d32f2f' }}>Deactivate</button>
@@ -241,7 +250,8 @@ function RulesList({
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import type { WeeklyAggregation } from '@lol/shared';
+import { cardStyle, fontSizes, colors } from '@/lib/styles';
 
 interface ChartsProps {
   weeks: WeeklyAggregation[];
@@ -36,20 +37,17 @@ function BarChart({
   return (
     <div
       style={{
-        background: '#fff',
-        borderRadius: 8,
-        border: '1px solid #e0e0e0',
-        padding: '1rem 1.25rem',
+        ...cardStyle,
         flex: 1,
         minWidth: 380,
       }}
     >
-      <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.9375rem', color: '#333' }}>{title}</h3>
+      <h3 style={{ margin: '0 0 0.75rem', fontSize: fontSizes.lg, color: colors.text }}>{title}</h3>
 
       {/* Legend */}
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
         {series.map((s) => (
-          <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem' }}>
+          <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: fontSizes.sm }}>
             <span style={{ width: 10, height: 10, borderRadius: 2, background: s.color, display: 'inline-block' }} />
             {s.label}
           </div>

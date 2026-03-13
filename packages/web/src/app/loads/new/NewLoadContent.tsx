@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { APP_NAME, LoadStatus } from '@lol/shared';
+import { LoadStatus } from '@lol/shared';
 import type { WeekDto, CreateLoadRequest } from '@lol/shared';
 import { useAuth } from '@/lib/auth';
 import { getErrorMessage } from '@/lib/errors';
 import { apiFetch } from '@/lib/api';
 import { LoadForm, emptyFormData, type LoadFormData } from '../LoadForm';
+import { PageShell } from '@/components/PageShell';
+import { ErrorBanner, LoadingBox } from '@/components/StateBoxes';
 
 export function NewLoadContent() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -106,7 +108,7 @@ export function NewLoadContent() {
 
   // ── Render ────────────────────────────────────────────────
   if (authLoading || loading) {
-    return <main style={{ padding: '2rem' }}>Loading...</main>;
+    return <main style={{ padding: '2rem' }}><LoadingBox message="Loading..." /></main>;
   }
 
   if (!user) return null;
@@ -114,9 +116,7 @@ export function NewLoadContent() {
   if (initError) {
     return (
       <main style={{ padding: '2rem', maxWidth: 800, margin: '0 auto' }}>
-        <div style={{ color: '#d32f2f', padding: '1rem', background: '#fff5f5', borderRadius: 6 }}>
-          {initError}
-        </div>
+        <ErrorBanner message={initError} />
       </main>
     );
   }
@@ -124,50 +124,15 @@ export function NewLoadContent() {
   if (!initialData) return null;
 
   return (
-    <main style={{ padding: '1.5rem 2rem', maxWidth: 1000, margin: '0 auto' }}>
-      {/* ── Header ── */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1.5rem',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem' }}>
-          <h1 style={{ margin: 0, fontSize: '1.5rem' }}>{APP_NAME}</h1>
-          <span style={{ color: '#888', fontSize: '0.875rem' }}>/ New Load</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button
-            onClick={() => router.push('/loads')}
-            style={{
-              padding: '0.375rem 0.75rem',
-              background: '#fff',
-              border: '1px solid #ccc',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: '0.8125rem',
-            }}
-          >
-            Back to Loads
-          </button>
-          <button
-            onClick={logout}
-            style={{
-              padding: '0.375rem 0.75rem',
-              background: '#eee',
-              border: '1px solid #ccc',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: '0.8125rem',
-            }}
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-
+    <PageShell
+      breadcrumb="/ New Load"
+      user={user}
+      onLogout={logout}
+      nav={[{ label: 'Home', href: '/' }, { label: 'Loads', href: '/loads' }]}
+      title="New Load"
+      subtitle="Create a new load entry"
+      maxWidth={1000}
+    >
       <LoadForm
         initialData={initialData}
         weeks={weeks}
@@ -175,6 +140,6 @@ export function NewLoadContent() {
         submitLabel="Create Load"
         title="New Load"
       />
-    </main>
+    </PageShell>
   );
 }

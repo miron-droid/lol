@@ -74,6 +74,9 @@ export type {
   UpdateAdjustmentsRequest,
 } from './salary/salary.types';
 
+/** Master Data */
+export type { PickerItem, DriverDto, UnitDto, BrokerageDto } from './master-data/master-data.types';
+
 /** Integration Events */
 export { IntegrationEventStatus, IntegrationEventResult } from './integration/integration-event.enums';
 export type { IntegrationEventDto, CargoWebhookPayload } from './integration/integration-event.types';

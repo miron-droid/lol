@@ -2,8 +2,10 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { APP_NAME } from '@lol/shared';
 import { useAuth } from '@/lib/auth';
 import { getErrorMessage } from '@/lib/errors';
+import { colors, fontSizes, radii, shadows, spacing, inputStyle, labelStyle, primaryBtnStyle, loadingBtnStyle, validationErrorStyle } from '@/lib/styles';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -34,79 +36,60 @@ export default function LoginPage() {
         minHeight: '100vh',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#f5f5f5',
+        background: `linear-gradient(135deg, ${colors.bgPage} 0%, ${colors.primaryLight} 100%)`,
       }}
     >
       <form
         onSubmit={handleSubmit}
         style={{
-          background: '#fff',
-          padding: '2rem',
-          borderRadius: 8,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          width: 360,
+          background: colors.bgWhite,
+          padding: '2.5rem 2rem',
+          borderRadius: radii.xl,
+          boxShadow: shadows.modal,
+          width: 380,
+          border: `1px solid ${colors.borderLight}`,
         }}
       >
-        <h1 style={{ margin: '0 0 1.5rem', fontSize: '1.5rem' }}>LOL vNext</h1>
+        <div style={{ textAlign: 'center', marginBottom: spacing.xxl }}>
+          <h1 style={{ margin: 0, fontSize: fontSizes.title, fontWeight: 700, color: colors.text }}>{APP_NAME}</h1>
+          <p style={{ margin: `${spacing.sm} 0 0`, fontSize: fontSizes.md, color: colors.textMuted }}>
+            Sign in to your account
+          </p>
+        </div>
 
         {error && (
-          <p style={{ color: '#d32f2f', margin: '0 0 1rem', fontSize: '0.875rem' }}>
-            {error}
-          </p>
+          <div style={validationErrorStyle}>{error}</div>
         )}
 
-        <label style={{ display: 'block', marginBottom: '1rem' }}>
-          <span style={{ display: 'block', marginBottom: 4, fontSize: '0.875rem' }}>
-            Email
-          </span>
+        <div style={{ marginBottom: spacing.xl }}>
+          <label style={labelStyle}>Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              border: '1px solid #ccc',
-              borderRadius: 4,
-              boxSizing: 'border-box',
-            }}
+            placeholder="you@company.com"
+            style={inputStyle}
           />
-        </label>
+        </div>
 
-        <label style={{ display: 'block', marginBottom: '1.5rem' }}>
-          <span style={{ display: 'block', marginBottom: 4, fontSize: '0.875rem' }}>
-            Password
-          </span>
+        <div style={{ marginBottom: spacing.xxl }}>
+          <label style={labelStyle}>Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              border: '1px solid #ccc',
-              borderRadius: 4,
-              boxSizing: 'border-box',
-            }}
+            placeholder="Enter your password"
+            style={inputStyle}
           />
-        </label>
+        </div>
 
         <button
           type="submit"
           disabled={loading}
-          style={{
-            width: '100%',
-            padding: '0.625rem',
-            background: loading ? '#999' : '#1976d2',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 4,
-            cursor: loading ? 'default' : 'pointer',
-            fontSize: '1rem',
-          }}
+          style={{ ...loadingBtnStyle(primaryBtnStyle, loading), width: '100%', padding: `${spacing.lg} ${spacing.xl}`, fontSize: fontSizes.md }}
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>

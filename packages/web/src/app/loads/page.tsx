@@ -14,7 +14,7 @@ import { LoadsTable } from './LoadsTable';
 import { ExportModal } from './ExportModal';
 import { PageShell } from '@/components/PageShell';
 import { ErrorBanner, LoadingBox, EmptyBox } from '@/components/StateBoxes';
-import { primaryBtnStyle, navBtnStyle, checkboxLabelStyle } from '@/lib/styles';
+import { primaryBtnStyle, navBtnStyle, checkboxLabelStyle, stickyToolbarStyle, toolbarGroupStyle, bannerStyle } from '@/lib/styles';
 
 export default function LoadsPage() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -62,7 +62,7 @@ export default function LoadsPage() {
   }, [refetch]);
 
   if (authLoading) {
-    return <main style={{ padding: '2rem' }}>Loading...</main>;
+    return <main style={{ padding: '2rem' }}><LoadingBox message="Authenticating..." /></main>;
   }
 
   if (!user) {
@@ -79,19 +79,12 @@ export default function LoadsPage() {
       user={user}
       onLogout={logout}
       nav={[{label:'Home',href:'/'}]}
+      title="Loads"
+      subtitle={selectedWeek ? `${selectedWeek.label} — ${selectedWeek.startDate} to ${selectedWeek.endDate}` : undefined}
     >
 
-      {/* ── Toolbar: week switcher + create button ── */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1rem',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-        }}
-      >
+      {/* ── Sticky Toolbar ── */}
+      <div style={stickyToolbarStyle}>
         {weeksLoading ? (
           <span style={{ color: '#888', fontSize: '0.875rem' }}>Loading weeks...</span>
         ) : weeksError ? (
@@ -102,7 +95,7 @@ export default function LoadsPage() {
           <WeekSwitcher weeks={weeks} selectedWeek={selectedWeek} onSelect={selectWeek} />
         )}
 
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <div style={toolbarGroupStyle}>
           {canArchive && (
             <label style={{ ...checkboxLabelStyle, fontSize: '0.8125rem' }}>
               <input
@@ -150,22 +143,11 @@ export default function LoadsPage() {
 
       {/* ── Week info banner ── */}
       {selectedWeek && (
-        <div
-          style={{
-            padding: '0.5rem 0.75rem',
-            background: '#f5f9ff',
-            borderRadius: 4,
-            fontSize: '0.8125rem',
-            color: '#444',
-            marginBottom: '1rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}
-        >
+        <div style={{ ...bannerStyle('info'), justifyContent: 'space-between' }}>
           <span>
             <strong>{selectedWeek.label}</strong> &mdash; {selectedWeek.startDate} to {selectedWeek.endDate}
           </span>
-          <span>
+          <span style={{ fontWeight: 500, fontSize: '0.8125rem' }}>
             {loadsLoading ? 'Loading...' : (
               showArchived
                 ? `${activeCount} active, ${archivedCount} archived`
@@ -182,9 +164,14 @@ export default function LoadsPage() {
       {loadsError ? (
         <ErrorBanner message={loadsError} />
       ) : loadsLoading ? (
-        <LoadingBox message="Loading loads..." />
+        <LoadingBox message="Loading loads..." subtitle="Fetching data for the selected week" />
       ) : loads.length === 0 ? (
-        <EmptyBox title="No loads this week" subtitle="Create a new load or switch to a different week." />
+        <EmptyBox
+          title="No loads this week"
+          subtitle="Create a new load or switch to a different week."
+          actionLabel="+ New Load"
+          onAction={() => router.push(`/loads/new${selectedWeek ? `?weekId=${selectedWeek.id}` : ''}`)}
+        />
       ) : (
         <LoadsTable
           loads={loads}

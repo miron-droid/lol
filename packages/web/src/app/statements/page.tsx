@@ -6,10 +6,12 @@ import { Action } from '@lol/shared';
 import type { WeekDto, StatementDto, StatementArchiveItem, GenerateStatementRequest, StatementType } from '@lol/shared';
 import { useAuth } from '@/lib/auth';
 import { usePermissions } from '@/lib/permissions';
+import { useMasterData } from '@/lib/use-master-data';
 import { apiFetch } from '@/lib/api';
 import { getErrorMessage } from '@/lib/errors';
-import { labelStyle, inputStyle, checkboxLabelStyle, fmt } from '@/lib/styles';
+import { labelStyle, inputStyle, checkboxLabelStyle, fmt, tabBtnStyle, thStyle, tdStyle, tdRight, tableWrapperStyle, tableStyle, smallBtnStyle, primaryBtnStyle, loadingBtnStyle, accessDeniedStyle, accessDeniedSubtextStyle, badgeStyle, zebraRowProps, thAction, tdAction } from '@/lib/styles';
 import { ErrorBanner, LoadingBox, EmptyBox } from '@/components/StateBoxes';
+import { EntityPicker } from '@/components/EntityPicker';
 import { PageShell } from '@/components/PageShell';
 import { StatementPreview } from './StatementPreview';
 
@@ -36,6 +38,8 @@ export default function StatementsPage() {
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
   const [onlyUnpaid, setOnlyUnpaid] = useState(false);
   const [unitId, setUnitId] = useState('');
+
+  const { items: unitItems, loading: unitsLoading } = useMasterData('units');
 
   const [preview, setPreview] = useState<StatementDto | null>(null);
   const [archive, setArchive] = useState<StatementArchiveItem[]>([]);
@@ -134,22 +138,15 @@ export default function StatementsPage() {
   }
 
   // ── Render guards ───────────────────────────────────────────
-  if (authLoading) return <main style={{ padding: '2rem' }}>Loading...</main>;
+  if (authLoading) return <main style={{ padding: '2rem' }}><LoadingBox message="Authenticating..." /></main>;
   if (!user) return null;
 
   if (!allowed(Action.StatementsRead)) {
     return (
       <PageShell breadcrumb="/ Statements" user={user} onLogout={logout} nav={[{label:'Loads',href:'/loads'},{label:'Home',href:'/'}]}>
-        <div style={{
-          padding: '2rem',
-          textAlign: 'center',
-          color: '#d32f2f',
-          background: '#fff5f5',
-          borderRadius: 6,
-          border: '1px solid #ffcdd2',
-        }}>
+        <div style={accessDeniedStyle}>
           <strong>Access Denied</strong>
-          <p style={{ margin: '0.5rem 0 0', color: '#666', fontSize: '0.875rem' }}>
+          <p style={accessDeniedSubtextStyle}>
             You do not have permission to view statements. Contact an administrator if you need access.
           </p>
         </div>
@@ -158,11 +155,18 @@ export default function StatementsPage() {
   }
 
   return (
-    <PageShell breadcrumb="/ Statements" user={user} onLogout={logout} nav={[{label:'Loads',href:'/loads'},{label:'Home',href:'/'}]}>
+    <PageShell
+      breadcrumb="/ Statements"
+      user={user}
+      onLogout={logout}
+      nav={[{label:'Loads',href:'/loads'},{label:'Home',href:'/'}]}
+      title="Statements"
+      subtitle="Generate and manage driver/owner statements"
+    >
       {/* ── Tabs ── */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-        <button onClick={() => setView('form')} style={tabBtn(view === 'form')}>Generate</button>
-        <button onClick={() => setView('archive')} style={tabBtn(view === 'archive')}>Archive</button>
+        <button onClick={() => setView('form')} style={tabBtnStyle(view === 'form')}>Generate</button>
+        <button onClick={() => setView('archive')} style={tabBtnStyle(view === 'archive')}>Archive</button>
       </div>
 
       {/* ── Error ── */}
@@ -201,22 +205,19 @@ export default function StatementsPage() {
             </label>
           </div>
           <div style={{ marginBottom: '1.25rem' }}>
-            <label style={labelStyle}>Unit ID (optional)</label>
-            <input style={inputStyle} value={unitId} onChange={(e) => setUnitId(e.target.value)} placeholder="UUID (optional)" />
+            <EntityPicker
+              label="Unit"
+              value={unitId}
+              onChange={setUnitId}
+              items={unitItems}
+              loading={unitsLoading}
+              placeholder="Select unit (optional)..."
+            />
           </div>
           <button
             onClick={handlePreview}
             disabled={loading || !weekId}
-            style={{
-              padding: '0.5rem 1.5rem',
-              background: loading ? '#999' : '#1976d2',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 4,
-              cursor: loading ? 'default' : 'pointer',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-            }}
+            style={loadingBtnStyle(primaryBtnStyle, loading)}
           >
             {loading ? 'Loading...' : 'Preview Statement'}
           </button>
@@ -240,47 +241,60 @@ export default function StatementsPage() {
       {view === 'archive' && (
         <>
           {loading ? (
-            <LoadingBox message="Loading archive..." />
+            <LoadingBox message="Loading archive..." subtitle="Fetching saved statements" />
           ) : archive.length === 0 ? (
-            <EmptyBox title="No statements generated yet." subtitle="Use the Generate tab to create one." />
+            <EmptyBox
+              title="No statements generated yet"
+              subtitle="Use the Generate tab to create your first statement."
+              actionLabel="Generate"
+              onAction={() => setView('form')}
+            />
           ) : (
-            <div style={{ overflowX: 'auto', border: '1px solid #e0e0e0', borderRadius: 6 }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 800 }}>
+            <div style={tableWrapperStyle}>
+              <table style={{ ...tableStyle, minWidth: 800 }}>
                 <thead>
                   <tr>
-                    {['Type', 'Week', 'Unit', 'Loads', 'Gross', 'Net Profit', 'Generated', 'By', ''].map((h) => (
-                      <th key={h} style={archiveThStyle}>{h}</th>
-                    ))}
+                    <th style={thStyle}>Type</th>
+                    <th style={thStyle}>Week</th>
+                    <th style={thStyle}>Unit</th>
+                    <th style={thStyle}>Loads</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>Gross</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>Net Profit</th>
+                    <th style={thStyle}>Generated</th>
+                    <th style={thStyle}>By</th>
+                    <th style={thAction}></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {archive.map((s) => (
-                    <tr key={s.id} style={{ cursor: 'pointer' }} onClick={() => handleViewArchived(s.id)}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = '#f5f9ff'; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = ''; }}
+                  {archive.map((s, idx) => {
+                    const zebra = zebraRowProps(idx);
+                    return (
+                    <tr key={s.id} style={{ ...zebra.style, cursor: 'pointer' }} onClick={() => handleViewArchived(s.id)}
+                      onMouseEnter={zebra.onMouseEnter} onMouseLeave={zebra.onMouseLeave}
                     >
-                      <td style={archiveTdStyle}>
-                        <span style={{ background: s.statementType === 'driver' ? '#e3f2fd' : '#f3e5f5', padding: '2px 8px', borderRadius: 3, fontSize: '0.75rem', fontWeight: 600 }}>
+                      <td style={tdStyle}>
+                        <span style={badgeStyle(s.statementType === 'driver' ? 'info' : 'purple')}>
                           {s.statementType}
                         </span>
                       </td>
-                      <td style={archiveTdStyle}>{s.weekLabel}</td>
-                      <td style={archiveTdStyle}>{s.unitId ? s.unitId.substring(0, 8) + '...' : '—'}</td>
-                      <td style={archiveTdStyle}>{s.loadCount}</td>
-                      <td style={{ ...archiveTdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(s.totalGross)}</td>
-                      <td style={{ ...archiveTdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: s.totalNetProfit >= 0 ? '#00897b' : '#d32f2f' }}>{fmt(s.totalNetProfit)}</td>
-                      <td style={archiveTdStyle}>{new Date(s.generatedAt).toLocaleString()}</td>
-                      <td style={archiveTdStyle}>{s.generatedByName}</td>
-                      <td style={archiveTdStyle}>
+                      <td style={tdStyle}>{s.weekLabel}</td>
+                      <td style={tdStyle}>{s.unitId ? s.unitId.substring(0, 8) + '...' : '—'}</td>
+                      <td style={tdStyle}>{s.loadCount}</td>
+                      <td style={tdRight}>{fmt(s.totalGross)}</td>
+                      <td style={{ ...tdRight, color: s.totalNetProfit >= 0 ? '#00897b' : '#d32f2f' }}>{fmt(s.totalNetProfit)}</td>
+                      <td style={tdStyle}>{new Date(s.generatedAt).toLocaleString()}</td>
+                      <td style={tdStyle}>{s.generatedByName}</td>
+                      <td style={tdAction}>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleViewArchived(s.id); }}
-                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', background: '#fff', border: '1px solid #ccc', borderRadius: 3, cursor: 'pointer' }}
+                          style={smallBtnStyle}
                         >
                           View
                         </button>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -290,24 +304,3 @@ export default function StatementsPage() {
     </PageShell>
   );
 }
-
-// ── Style helpers ─────────────────────────────────────────────
-function tabBtn(active: boolean): React.CSSProperties {
-  return {
-    padding: '0.5rem 1rem', fontSize: '0.875rem', fontWeight: active ? 600 : 400,
-    background: active ? '#1976d2' : '#fff', color: active ? '#fff' : '#333',
-    border: active ? '1px solid #1976d2' : '1px solid #ccc',
-    borderRadius: 4, cursor: 'pointer',
-  };
-}
-
-const archiveThStyle: React.CSSProperties = {
-  padding: '0.5rem 0.75rem', textAlign: 'left', borderBottom: '2px solid #e0e0e0',
-  fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: '#666',
-  whiteSpace: 'nowrap', background: '#fafafa',
-};
-
-const archiveTdStyle: React.CSSProperties = {
-  padding: '0.5rem 0.75rem', borderBottom: '1px solid #f0f0f0',
-  fontSize: '0.8125rem', whiteSpace: 'nowrap',
-};

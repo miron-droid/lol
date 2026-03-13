@@ -5,12 +5,25 @@ import { useRouter } from 'next/navigation';
 import { APP_NAME, API_PREFIX, Action, type HealthResponse } from '@lol/shared';
 import { useAuth } from '@/lib/auth';
 import { usePermissions } from '@/lib/permissions';
+import { colors, fontSizes, radii, spacing, shadows, primaryBtnStyle, navBtnStyle, cardStyle, pageTitleStyle, pageSubtitleStyle } from '@/lib/styles';
 
 export default function HomePage() {
   const { user, loading, logout } = useAuth();
   const { can: allowed } = usePermissions();
   const router = useRouter();
   const [health, setHealth] = useState<HealthResponse | null>(null);
+
+  const homeBtn = (bg: string): React.CSSProperties => ({
+    ...primaryBtnStyle,
+    padding: `${spacing.lg} ${spacing.xxl}`,
+    background: bg,
+    borderRadius: radii.lg,
+    fontSize: fontSizes.lg,
+    boxShadow: shadows.card,
+    flex: '1 1 auto',
+    minWidth: 140,
+    justifyContent: 'center',
+  });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -35,71 +48,42 @@ export default function HomePage() {
   }
 
   return (
-    <main style={{ padding: '2rem', maxWidth: 600, margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>{APP_NAME}</h1>
+    <main style={{ padding: spacing.pageX, maxWidth: 700, margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xxl }}>
+        <div>
+          <h1 style={pageTitleStyle}>{APP_NAME}</h1>
+          <p style={pageSubtitleStyle}>
+            Signed in as <strong>{user.firstName} {user.lastName}</strong> ({user.role})
+          </p>
+        </div>
         <button
           onClick={logout}
           style={{
-            padding: '0.375rem 0.75rem',
-            background: '#eee',
-            border: '1px solid #ccc',
-            borderRadius: 4,
-            cursor: 'pointer',
+            ...navBtnStyle,
+            background: colors.bgPage,
           }}
         >
           Logout
         </button>
       </div>
 
-      <p>
-        Signed in as <strong>{user.firstName} {user.lastName}</strong> ({user.role})
-      </p>
-
-      <div style={{ margin: '1.5rem 0', display: 'flex', gap: '0.75rem' }}>
+      <div style={{ display: 'flex', gap: spacing.lg, flexWrap: 'wrap', marginBottom: spacing.xxl }}>
         <button
           onClick={() => router.push('/dashboard')}
-          style={{
-            padding: '0.75rem 1.5rem',
-            background: '#00897b',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 6,
-            cursor: 'pointer',
-            fontSize: '1rem',
-            fontWeight: 500,
-          }}
+          style={homeBtn(colors.teal)}
         >
-          Open Dashboard
+          Dashboard
         </button>
         <button
           onClick={() => router.push('/loads')}
-          style={{
-            padding: '0.75rem 1.5rem',
-            background: '#1976d2',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 6,
-            cursor: 'pointer',
-            fontSize: '1rem',
-            fontWeight: 500,
-          }}
+          style={homeBtn(colors.primary)}
         >
-          Open List of Loads
+          List of Loads
         </button>
         {allowed(Action.SalaryPreview) && (
           <button
             onClick={() => router.push('/salary')}
-            style={{
-              padding: '0.75rem 1.5rem',
-              background: '#6a1b9a',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: 500,
-            }}
+            style={homeBtn(colors.purple)}
           >
             Salary
           </button>
@@ -107,37 +91,32 @@ export default function HomePage() {
         {allowed(Action.SalaryRulesRead) && (
           <button
             onClick={() => router.push('/settings')}
-            style={{
-              padding: '0.75rem 1.5rem',
-              background: '#546e7a',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: 500,
-            }}
+            style={homeBtn('#546e7a')}
           >
             Settings
           </button>
         )}
       </div>
 
-      <hr />
-      <h2>API Health</h2>
-      {health ? (
-        <pre
-          style={{
-            background: '#f4f4f4',
-            padding: '1rem',
-            borderRadius: 8,
-          }}
-        >
-          {JSON.stringify(health, null, 2)}
-        </pre>
-      ) : (
-        <p style={{ color: '#888' }}>Connecting to API...</p>
-      )}
+      <div style={cardStyle}>
+        <h3 style={{ margin: `0 0 ${spacing.md}`, fontSize: fontSizes.md, fontWeight: 600, color: colors.textSecondary }}>API Health</h3>
+        {health ? (
+          <pre
+            style={{
+              background: colors.bgPage,
+              padding: spacing.xl,
+              borderRadius: radii.lg,
+              margin: 0,
+              fontSize: fontSizes.sm,
+              overflow: 'auto',
+            }}
+          >
+            {JSON.stringify(health, null, 2)}
+          </pre>
+        ) : (
+          <p style={{ color: colors.textMuted, margin: 0, fontSize: fontSizes.md }}>Connecting to API...</p>
+        )}
+      </div>
     </main>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import type { StatementDto } from '@lol/shared';
+import { thStyle, tdStyle, tdRight, tableWrapperStyle, tableStyle, primaryBtnStyle, secondaryBtnStyle, loadingBtnStyle, bannerStyle, tagStyle, cardStyle, colors, fontSizes, spacing, zebraRowProps, formActionsStyle, fmt as fmtMoney } from '@/lib/styles';
 
 interface PreviewProps {
   statement: StatementDto;
@@ -9,33 +10,9 @@ interface PreviewProps {
   saving: boolean;
 }
 
-function fmt(n: number): string {
-  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-const thStyle: React.CSSProperties = {
-  padding: '0.375rem 0.5rem',
-  textAlign: 'left',
-  borderBottom: '2px solid #e0e0e0',
-  fontSize: '0.6875rem',
-  fontWeight: 600,
-  textTransform: 'uppercase',
-  color: '#666',
-  whiteSpace: 'nowrap',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '0.375rem 0.5rem',
-  borderBottom: '1px solid #f0f0f0',
-  fontSize: '0.75rem',
-  whiteSpace: 'nowrap',
-};
-
-const tdRight: React.CSSProperties = { ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
-
 function FlagCell({ value }: { value: boolean }) {
   return (
-    <span style={{ color: value ? '#388e3c' : '#bdbdbd', fontWeight: value ? 600 : 400 }}>
+    <span style={{ color: value ? colors.success : '#bdbdbd', fontWeight: value ? 600 : 400 }}>
       {value ? 'Y' : '-'}
     </span>
   );
@@ -49,28 +26,8 @@ export function StatementPreview({ statement, onSave, onClose, saving }: Preview
     <div>
       {/* Read-only indicator for saved statements */}
       {isSaved && (
-        <div style={{
-          padding: '0.5rem 0.75rem',
-          marginBottom: '0.75rem',
-          background: '#e3f2fd',
-          border: '1px solid #90caf9',
-          borderRadius: 4,
-          fontSize: '0.8125rem',
-          color: '#0d47a1',
-          fontWeight: 500,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-        }}>
-          <span style={{
-            display: 'inline-block',
-            padding: '1px 8px',
-            borderRadius: 3,
-            fontSize: '0.625rem',
-            fontWeight: 700,
-            background: '#0d47a1',
-            color: '#fff',
-          }}>
+        <div style={bannerStyle('info')}>
+          <span style={tagStyle('solidInfo')}>
             SNAPSHOT
           </span>
           <span>
@@ -85,25 +42,25 @@ export function StatementPreview({ statement, onSave, onClose, saving }: Preview
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '0.75rem',
+          marginBottom: spacing.lg,
           flexWrap: 'wrap',
-          gap: '0.5rem',
+          gap: spacing.md,
         }}
       >
         <div>
-          <span style={{ fontWeight: 600, fontSize: '1rem' }}>
+          <span style={{ fontWeight: 600, fontSize: fontSizes.lg }}>
             {statement.statementType === 'driver' ? 'Driver' : 'Owner'} Statement
           </span>
-          <span style={{ color: '#888', fontSize: '0.8125rem', marginLeft: '0.5rem' }}>
+          <span style={{ color: colors.textMuted, fontSize: fontSizes.base, marginLeft: spacing.md }}>
             {statement.weekLabel}
           </span>
           {statement.unitId && (
-            <span style={{ color: '#888', fontSize: '0.75rem', marginLeft: '0.5rem' }}>
+            <span style={{ color: colors.textMuted, fontSize: fontSizes.sm, marginLeft: spacing.md }}>
               Unit: {statement.unitId.substring(0, 8)}...
             </span>
           )}
         </div>
-        <div style={{ fontSize: '0.75rem', color: '#666' }}>
+        <div style={{ fontSize: fontSizes.sm, color: colors.textSecondary }}>
           By: {statement.generatedByName}
         </div>
       </div>
@@ -111,36 +68,35 @@ export function StatementPreview({ statement, onSave, onClose, saving }: Preview
       {/* Totals bar */}
       <div
         style={{
+          ...cardStyle,
           display: 'flex',
-          gap: '1rem',
+          gap: spacing.xl,
           flexWrap: 'wrap',
-          padding: '0.625rem 0.75rem',
-          background: '#f5f9ff',
-          borderRadius: 4,
-          marginBottom: '0.75rem',
-          fontSize: '0.8125rem',
+          background: colors.primaryLight,
+          marginBottom: spacing.lg,
+          fontSize: fontSizes.base,
         }}
       >
         <span><strong>Loads:</strong> {snapshot.totals.loadCount}</span>
-        <span><strong>Gross:</strong> {fmt(snapshot.totals.grossAmount)}</span>
-        <span><strong>Driver:</strong> {fmt(snapshot.totals.driverCostAmount)}</span>
-        <span style={{ color: snapshot.totals.profitAmount >= 0 ? '#2e7d32' : '#d32f2f' }}>
-          <strong>Profit:</strong> {fmt(snapshot.totals.profitAmount)}
+        <span><strong>Gross:</strong> {fmtMoney(snapshot.totals.grossAmount)}</span>
+        <span><strong>Driver:</strong> {fmtMoney(snapshot.totals.driverCostAmount)}</span>
+        <span style={{ color: snapshot.totals.profitAmount >= 0 ? colors.success : colors.danger }}>
+          <strong>Profit:</strong> {fmtMoney(snapshot.totals.profitAmount)}
         </span>
-        <span><strong>OTR:</strong> {fmt(snapshot.totals.otrAmount)}</span>
-        <span style={{ color: snapshot.totals.netProfitAmount >= 0 ? '#00897b' : '#d32f2f' }}>
-          <strong>Net Profit:</strong> {fmt(snapshot.totals.netProfitAmount)}
+        <span><strong>OTR:</strong> {fmtMoney(snapshot.totals.otrAmount)}</span>
+        <span style={{ color: snapshot.totals.netProfitAmount >= 0 ? colors.teal : colors.danger }}>
+          <strong>Net Profit:</strong> {fmtMoney(snapshot.totals.netProfitAmount)}
         </span>
       </div>
 
       {/* Loads table */}
       {snapshot.loads.length === 0 ? (
-        <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>
+        <div style={{ padding: '2rem', textAlign: 'center', color: colors.textMuted }}>
           No loads match the selected filters.
         </div>
       ) : (
-        <div style={{ overflowX: 'auto', border: '1px solid #e0e0e0', borderRadius: 4, marginBottom: '1rem' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
+        <div style={{ ...tableWrapperStyle, marginBottom: spacing.xl }}>
+          <table style={{ ...tableStyle, minWidth: 900 }}>
             <thead>
               <tr>
                 <th style={thStyle}>SYL #</th>
@@ -160,42 +116,38 @@ export function StatementPreview({ statement, onSave, onClose, saving }: Preview
               </tr>
             </thead>
             <tbody>
-              {snapshot.loads.map((l, i) => (
-                <tr key={i}>
+              {snapshot.loads.map((l, i) => {
+                const zebra = zebraRowProps(i);
+                return (
+                <tr key={i} style={zebra.style} onMouseEnter={zebra.onMouseEnter} onMouseLeave={zebra.onMouseLeave}>
                   <td style={{ ...tdStyle, fontWeight: 600 }}>{l.sylNumber}</td>
                   <td style={tdStyle}>{l.date}</td>
                   <td style={{ ...tdStyle, maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.fromAddress}</td>
                   <td style={{ ...tdStyle, maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.toAddress}</td>
                   <td style={tdRight}>{l.miles}</td>
-                  <td style={tdRight}>{fmt(l.grossAmount)}</td>
-                  <td style={tdRight}>{fmt(l.driverCostAmount)}</td>
-                  <td style={{ ...tdRight, color: l.profitAmount >= 0 ? '#2e7d32' : '#d32f2f' }}>{fmt(l.profitAmount)}</td>
-                  <td style={tdRight}>{fmt(l.otrAmount)}</td>
-                  <td style={{ ...tdRight, color: l.netProfitAmount >= 0 ? '#00897b' : '#d32f2f' }}>{fmt(l.netProfitAmount)}</td>
+                  <td style={tdRight}>{fmtMoney(l.grossAmount)}</td>
+                  <td style={tdRight}>{fmtMoney(l.driverCostAmount)}</td>
+                  <td style={{ ...tdRight, color: l.profitAmount >= 0 ? colors.success : colors.danger }}>{fmtMoney(l.profitAmount)}</td>
+                  <td style={tdRight}>{fmtMoney(l.otrAmount)}</td>
+                  <td style={{ ...tdRight, color: l.netProfitAmount >= 0 ? colors.teal : colors.danger }}>{fmtMoney(l.netProfitAmount)}</td>
                   <td style={{ ...tdStyle, textAlign: 'center' }}><FlagCell value={l.quickPayFlag} /></td>
                   <td style={{ ...tdStyle, textAlign: 'center' }}><FlagCell value={l.directPaymentFlag} /></td>
                   <td style={{ ...tdStyle, textAlign: 'center' }}><FlagCell value={l.factoringFlag} /></td>
                   <td style={{ ...tdStyle, textAlign: 'center' }}><FlagCell value={l.driverPaidFlag} /></td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
 
       {/* Action buttons */}
-      <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+      <div style={formActionsStyle}>
         <button
           type="button"
           onClick={onClose}
-          style={{
-            padding: '0.5rem 1.25rem',
-            background: '#fff',
-            border: '1px solid #ccc',
-            borderRadius: 4,
-            cursor: 'pointer',
-            fontSize: '0.875rem',
-          }}
+          style={secondaryBtnStyle}
         >
           {isSaved ? 'Back to Archive' : 'Back'}
         </button>
@@ -204,16 +156,7 @@ export function StatementPreview({ statement, onSave, onClose, saving }: Preview
             type="button"
             onClick={onSave}
             disabled={saving}
-            style={{
-              padding: '0.5rem 1.5rem',
-              background: saving ? '#999' : '#1976d2',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 4,
-              cursor: saving ? 'default' : 'pointer',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-            }}
+            style={loadingBtnStyle(primaryBtnStyle, saving)}
           >
             {saving ? 'Saving...' : 'Save Statement'}
           </button>

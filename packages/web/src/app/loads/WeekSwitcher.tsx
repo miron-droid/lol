@@ -1,6 +1,7 @@
 'use client';
 
 import type { WeekDto } from '@lol/shared';
+import { inputStyle, fontSizes } from '@/lib/styles';
 
 interface WeekSwitcherProps {
   weeks: WeekDto[];
@@ -13,7 +14,7 @@ export function WeekSwitcher({ weeks, selectedWeek, onSelect }: WeekSwitcherProp
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
       <label
         htmlFor="week-select"
-        style={{ fontSize: '0.875rem', fontWeight: 600, whiteSpace: 'nowrap' }}
+        style={{ fontSize: fontSizes.md, fontWeight: 600, whiteSpace: 'nowrap' }}
       >
         Week:
       </label>
@@ -21,14 +22,7 @@ export function WeekSwitcher({ weeks, selectedWeek, onSelect }: WeekSwitcherProp
         id="week-select"
         value={selectedWeek?.id ?? ''}
         onChange={(e) => onSelect(e.target.value)}
-        style={{
-          padding: '0.375rem 0.5rem',
-          border: '1px solid #ccc',
-          borderRadius: 4,
-          fontSize: '0.875rem',
-          background: '#fff',
-          minWidth: 220,
-        }}
+        style={{ ...inputStyle, width: 'auto', minWidth: 220 }}
       >
         {weeks.map((w) => (
           <option key={w.id} value={w.id}>

@@ -2,6 +2,26 @@
 
 import { useState } from 'react';
 import type { SalaryRuleDto, SalaryRuleTier } from '@lol/shared';
+import {
+  labelStyle,
+  inputStyle,
+  inputDisabledStyle,
+  thStyle,
+  tdStyle,
+  smallBtnStyle,
+  iconBtnStyle,
+  primaryBtnStyle,
+  secondaryBtnStyle,
+  bannerStyle,
+  validationErrorStyle,
+  formActionsStyle,
+  sectionHeadingStyle,
+  gridTwo,
+  tableStyle,
+  colors,
+  fontSizes,
+  spacing,
+} from '@/lib/styles';
 
 interface Props {
   initial: SalaryRuleDto | null; // null = create mode
@@ -158,18 +178,18 @@ export function SalaryRuleEditor({ initial, onSave, onCancel }: Props) {
 
   return (
     <div>
-      <h2 style={{ margin: '0 0 1rem', fontSize: '1.125rem' }}>
+      <h2 style={sectionHeadingStyle}>
         {isEdit ? `Edit Rule Set: ${initial!.name} (v${initial!.version})` : 'Create New Rule Set'}
       </h2>
 
       {isEdit && (
-        <div style={{ marginBottom: '1rem', padding: '0.5rem 0.75rem', background: '#fff8e1', borderRadius: 4, fontSize: '0.8125rem', color: '#f57f17', border: '1px solid #fff176' }}>
+        <div style={bannerStyle('warning')}>
           Editing creates a new version (v{initial!.version + 1}). The previous version is preserved for audit.
         </div>
       )}
 
       {/* ── Form fields ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div style={{ ...gridTwo, marginBottom: spacing.xxl }}>
         <div>
           <label style={labelStyle}>Rule Set Name</label>
           <input
@@ -192,75 +212,75 @@ export function SalaryRuleEditor({ initial, onSave, onCancel }: Props) {
       </div>
 
       {/* ── Read-only fields ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div style={{ ...gridTwo, marginBottom: spacing.xxl }}>
         <div>
           <label style={labelStyle}>Application Mode</label>
-          <input type="text" value="Flat Rate" disabled style={{ ...inputStyle, background: '#f5f5f5', color: '#888' }} />
+          <input type="text" value="Flat Rate" disabled style={inputDisabledStyle} />
         </div>
         <div>
           <label style={labelStyle}>Salary Base</label>
-          <input type="text" value="Gross Profit (Gross - Driver Cost)" disabled style={{ ...inputStyle, background: '#f5f5f5', color: '#888' }} />
+          <input type="text" value="Gross Profit (Gross - Driver Cost)" disabled style={inputDisabledStyle} />
         </div>
       </div>
 
       {/* ── Tier rows editor ── */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+      <div style={{ marginBottom: spacing.xxl }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
           <label style={{ ...labelStyle, marginBottom: 0 }}>Tier Brackets</label>
-          <button onClick={addTier} style={addBtnStyle}>+ Add Tier</button>
+          <button onClick={addTier} style={{ ...smallBtnStyle, borderColor: colors.primary, color: colors.primary }}>+ Add Tier</button>
         </div>
 
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+        <table style={tableStyle}>
           <thead>
-            <tr style={{ background: '#f5f5f5' }}>
-              <th style={tierThStyle}>#</th>
-              <th style={tierThStyle}>Min Profit ($)</th>
-              <th style={tierThStyle}>Max Profit ($)</th>
-              <th style={tierThStyle}>Percent (%)</th>
-              <th style={tierThStyle}></th>
+            <tr>
+              <th style={thStyle}>#</th>
+              <th style={thStyle}>Min Profit ($)</th>
+              <th style={thStyle}>Max Profit ($)</th>
+              <th style={thStyle}>Percent (%)</th>
+              <th style={thStyle}></th>
             </tr>
           </thead>
           <tbody>
             {tiers.map((t, i) => (
-              <tr key={i} style={{ borderBottom: '1px solid #e0e0e0' }}>
-                <td style={tierTdStyle}>{i + 1}</td>
-                <td style={tierTdStyle}>
+              <tr key={i}>
+                <td style={tdStyle}>{i + 1}</td>
+                <td style={tdStyle}>
                   <input
                     type="number"
                     value={t.minProfit}
                     onChange={(e) => updateTier(i, 'minProfit', e.target.value)}
                     disabled={i > 0} // auto-chained from previous tier
-                    style={{ ...tierInputStyle, background: i > 0 ? '#f9f9f9' : '#fff' }}
+                    style={i > 0 ? inputDisabledStyle : inputStyle}
                     step="0.01"
                     min="0"
                   />
                 </td>
-                <td style={tierTdStyle}>
+                <td style={tdStyle}>
                   <input
                     type="number"
                     value={t.maxProfit}
                     onChange={(e) => updateTier(i, 'maxProfit', e.target.value)}
                     placeholder={i === tiers.length - 1 ? '∞ (leave empty)' : ''}
-                    style={tierInputStyle}
+                    style={inputStyle}
                     step="0.01"
                     min="0"
                   />
                 </td>
-                <td style={tierTdStyle}>
+                <td style={tdStyle}>
                   <input
                     type="number"
                     value={t.percent}
                     onChange={(e) => updateTier(i, 'percent', e.target.value)}
                     placeholder="e.g., 10"
-                    style={tierInputStyle}
+                    style={inputStyle}
                     step="0.01"
                     min="0"
                     max="100"
                   />
                 </td>
-                <td style={tierTdStyle}>
+                <td style={tdStyle}>
                   {tiers.length > 1 && (
-                    <button onClick={() => removeTier(i)} style={{ ...smallBtnStyle, color: '#d32f2f' }}>×</button>
+                    <button onClick={() => removeTier(i)} style={{ ...iconBtnStyle, color: colors.danger }}>×</button>
                   )}
                 </td>
               </tr>
@@ -268,107 +288,24 @@ export function SalaryRuleEditor({ initial, onSave, onCancel }: Props) {
           </tbody>
         </table>
 
-        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#888' }}>
+        <div style={{ marginTop: spacing.md, fontSize: fontSizes.sm, color: colors.textMuted }}>
           Boundaries use [min, max) semantics. Last tier must have empty max profit (unbounded). Min profit of each tier auto-chains from the previous tier.
         </div>
       </div>
 
       {/* ── Validation error ── */}
       {validationError && (
-        <div style={{ padding: '0.75rem', background: '#fff5f5', color: '#d32f2f', borderRadius: 4, border: '1px solid #ffcdd2', marginBottom: '1rem', fontSize: '0.875rem' }}>
-          {validationError}
-        </div>
+        <div style={validationErrorStyle}>{validationError}</div>
       )}
 
       {/* ── Actions ── */}
-      <div style={{ display: 'flex', gap: '0.75rem' }}>
-        <button onClick={handleSave} style={saveBtnStyle}>
+      <div style={formActionsStyle}>
+        <button onClick={handleSave} style={primaryBtnStyle}>
           {isEdit ? `Save as v${initial!.version + 1}` : 'Create Rule Set'}
         </button>
-        <button onClick={onCancel} style={cancelBtnStyle}>Cancel</button>
+        <button onClick={onCancel} style={secondaryBtnStyle}>Cancel</button>
       </div>
     </div>
   );
 }
 
-// ── Styles ──
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: '0.8125rem',
-  fontWeight: 600,
-  color: '#555',
-  marginBottom: '0.25rem',
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.5rem 0.75rem',
-  border: '1px solid #ccc',
-  borderRadius: 4,
-  fontSize: '0.875rem',
-  boxSizing: 'border-box',
-};
-
-const tierThStyle: React.CSSProperties = {
-  padding: '0.375rem 0.5rem',
-  fontWeight: 600,
-  fontSize: '0.8125rem',
-  textAlign: 'left',
-  borderBottom: '2px solid #ddd',
-};
-
-const tierTdStyle: React.CSSProperties = {
-  padding: '0.375rem 0.5rem',
-};
-
-const tierInputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.375rem 0.5rem',
-  border: '1px solid #ccc',
-  borderRadius: 4,
-  fontSize: '0.8125rem',
-  boxSizing: 'border-box',
-};
-
-const addBtnStyle: React.CSSProperties = {
-  padding: '0.25rem 0.75rem',
-  background: '#fff',
-  border: '1px solid #1976d2',
-  color: '#1976d2',
-  borderRadius: 4,
-  cursor: 'pointer',
-  fontSize: '0.8125rem',
-  fontWeight: 500,
-};
-
-const smallBtnStyle: React.CSSProperties = {
-  padding: '0.25rem 0.5rem',
-  background: '#fff',
-  border: '1px solid #ccc',
-  borderRadius: 4,
-  cursor: 'pointer',
-  fontSize: '0.875rem',
-  fontWeight: 600,
-};
-
-const saveBtnStyle: React.CSSProperties = {
-  padding: '0.5rem 1.5rem',
-  background: '#1976d2',
-  color: '#fff',
-  border: 'none',
-  borderRadius: 4,
-  cursor: 'pointer',
-  fontSize: '0.875rem',
-  fontWeight: 500,
-};
-
-const cancelBtnStyle: React.CSSProperties = {
-  padding: '0.5rem 1.5rem',
-  background: '#fff',
-  color: '#333',
-  border: '1px solid #ccc',
-  borderRadius: 4,
-  cursor: 'pointer',
-  fontSize: '0.875rem',
-};
