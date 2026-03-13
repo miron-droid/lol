@@ -1,8 +1,0 @@
-node_modules
-.git
-.env
-*.md
-docs
-packages/web
-coverage
-.next
