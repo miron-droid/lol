@@ -15,20 +15,38 @@ import { SeedService } from './seed.service';
   imports: [
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get('POSTGRES_HOST', 'localhost'),
-        port: config.get<number>('POSTGRES_PORT', 5432),
-        username: config.get('POSTGRES_USER', 'lol'),
-        password: config.get('POSTGRES_PASSWORD', 'lol_secret'),
-        database: config.get('POSTGRES_DB', 'lol_vnext'),
-        autoLoadEntities: true,
-        synchronize: false,
-        migrations: [join(__dirname, 'migrations/*.{ts,js}')],
-        // Auto-run pending migrations on startup (both dev and prod)
-        migrationsRun: true,
-        logging: config.get('NODE_ENV') === 'development',
-      }),
+      useFactory: (config: ConfigService) => {
+        const databaseUrl = config.get<string>('DATABASE_URL');
+
+        // If DATABASE_URL is set (Neon, Railway, Render, etc.), use it
+        if (databaseUrl) {
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            ssl: { rejectUnauthorized: false },
+            autoLoadEntities: true,
+            synchronize: false,
+            migrations: [join(__dirname, 'migrations/*.{ts,js}')],
+            migrationsRun: true,
+            logging: false,
+          };
+        }
+
+        // Otherwise use individual env vars (local dev)
+        return {
+          type: 'postgres',
+          host: config.get('POSTGRES_HOST', 'localhost'),
+          port: config.get<number>('POSTGRES_PORT', 5432),
+          username: config.get('POSTGRES_USER', 'lol'),
+          password: config.get('POSTGRES_PASSWORD', 'lol_secret'),
+          database: config.get('POSTGRES_DB', 'lol_vnext'),
+          autoLoadEntities: true,
+          synchronize: false,
+          migrations: [join(__dirname, 'migrations/*.{ts,js}')],
+          migrationsRun: true,
+          logging: config.get('NODE_ENV') === 'development',
+        };
+      },
     }),
     // Register entities needed by SeedService
     TypeOrmModule.forFeature([User, Week, Load, SalaryRule, Driver, Unit, Brokerage]),
