@@ -48,7 +48,12 @@ describe('DashboardService', () => {
     where: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
     groupBy: jest.fn().mockReturnThis(),
+    addGroupBy: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    addOrderBy: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
     getRawMany: jest.fn().mockResolvedValue(mockAggRows),
+    getRawOne: jest.fn().mockResolvedValue({ avgGross: '4600', avgProfit: '1380', avgMiles: '300', avgProfitMargin: '30' }),
   };
 
   beforeEach(() => {

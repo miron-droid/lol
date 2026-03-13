@@ -2,7 +2,13 @@
  * seed-demo.ts — Populate the database with realistic demo data.
  *
  * Creates: 1 admin, 1 accountant, 4 dispatchers, 10 drivers, 6 units,
- *          5 brokerages, 4 weeks, ~40 loads, 1 active salary rule set.
+ *          5 brokerages, 8 weeks, ~80 loads with weekly variation, 1 active salary rule set.
+ *
+ * Weekly profiles make charts visually interesting:
+ *   W6-W7: ramp-up period (low volume, moderate rates)
+ *   W8-W9: growth (increasing volume & rates)
+ *   W10-W11: peak season (high volume, high rates)
+ *   W12-W13: slight cooldown
  *
  * Usage:
  *   npx ts-node -r tsconfig-paths/register packages/api/src/database/seed-demo.ts
@@ -22,6 +28,47 @@ import { Brokerage } from '../master-data/entities/brokerage.entity';
 import { Role, LoadStatus } from '@lol/shared';
 
 dotenv.config({ path: join(__dirname, '../../../../.env') });
+
+/* ═══════════════════════════════════════════════════════
+   Weekly profiles — each week has its own "personality"
+   ═══════════════════════════════════════════════════════ */
+
+interface WeekProfile {
+  loadsPerDispatcher: [number, number]; // [min, max] loads
+  grossRange: [number, number];         // [min, max] gross per load
+  driverCostPct: [number, number];      // [min, max] driver cost as % of gross
+  quickPayRate: number;                 // probability of quickPay flag
+  directPayRate: number;
+  factoringRate: number;
+  driverPaidRate: number;
+}
+
+const WEEKLY_PROFILES: WeekProfile[] = [
+  // W6 — Slow start of quarter
+  { loadsPerDispatcher: [1, 2], grossRange: [1800, 3500], driverCostPct: [0.55, 0.65], quickPayRate: 0.1, directPayRate: 0.05, factoringRate: 0.3, driverPaidRate: 0.2 },
+  // W7 — Picking up slightly
+  { loadsPerDispatcher: [1, 3], grossRange: [2200, 4200], driverCostPct: [0.52, 0.62], quickPayRate: 0.15, directPayRate: 0.1, factoringRate: 0.25, driverPaidRate: 0.3 },
+  // W8 — Solid growth
+  { loadsPerDispatcher: [2, 3], grossRange: [3000, 5500], driverCostPct: [0.50, 0.60], quickPayRate: 0.2, directPayRate: 0.1, factoringRate: 0.2, driverPaidRate: 0.4 },
+  // W9 — Strong week
+  { loadsPerDispatcher: [2, 4], grossRange: [3500, 6500], driverCostPct: [0.48, 0.58], quickPayRate: 0.25, directPayRate: 0.15, factoringRate: 0.15, driverPaidRate: 0.5 },
+  // W10 — Peak season begins
+  { loadsPerDispatcher: [3, 4], grossRange: [4000, 7500], driverCostPct: [0.50, 0.60], quickPayRate: 0.3, directPayRate: 0.15, factoringRate: 0.1, driverPaidRate: 0.6 },
+  // W11 — Best week
+  { loadsPerDispatcher: [3, 5], grossRange: [4500, 8500], driverCostPct: [0.48, 0.55], quickPayRate: 0.35, directPayRate: 0.2, factoringRate: 0.1, driverPaidRate: 0.7 },
+  // W12 — Slight dip
+  { loadsPerDispatcher: [2, 4], grossRange: [3200, 6000], driverCostPct: [0.52, 0.62], quickPayRate: 0.2, directPayRate: 0.1, factoringRate: 0.2, driverPaidRate: 0.5 },
+  // W13 — Current week (partial)
+  { loadsPerDispatcher: [1, 3], grossRange: [2800, 5800], driverCostPct: [0.50, 0.60], quickPayRate: 0.15, directPayRate: 0.1, factoringRate: 0.25, driverPaidRate: 0.35 },
+];
+
+function rand(min: number, max: number): number {
+  return min + Math.random() * (max - min);
+}
+
+function coinFlip(probability: number): boolean {
+  return Math.random() < probability;
+}
 
 async function seed() {
   const ds = new DataSource({
@@ -145,8 +192,12 @@ async function seed() {
     brokerages.push(existing);
   }
 
-  // ── 5. Weeks (W10–W13 of 2026) ────────────────────────────────
+  // ── 5. Weeks (W6–W13 of 2026) ──────────────────────────────────
   const weekData = [
+    { label: 'LS2026-06', isoYear: 2026, isoWeek: 6,  startDate: '2026-02-02', endDate: '2026-02-08' },
+    { label: 'LS2026-07', isoYear: 2026, isoWeek: 7,  startDate: '2026-02-09', endDate: '2026-02-15' },
+    { label: 'LS2026-08', isoYear: 2026, isoWeek: 8,  startDate: '2026-02-16', endDate: '2026-02-22' },
+    { label: 'LS2026-09', isoYear: 2026, isoWeek: 9,  startDate: '2026-02-23', endDate: '2026-03-01' },
     { label: 'LS2026-10', isoYear: 2026, isoWeek: 10, startDate: '2026-03-02', endDate: '2026-03-08' },
     { label: 'LS2026-11', isoYear: 2026, isoWeek: 11, startDate: '2026-03-09', endDate: '2026-03-15' },
     { label: 'LS2026-12', isoYear: 2026, isoWeek: 12, startDate: '2026-03-16', endDate: '2026-03-22' },
@@ -165,7 +216,7 @@ async function seed() {
     weeks.push(existing);
   }
 
-  // ── 6. Loads ───────────────────────────────────────────────────
+  // ── 6. Loads — with distinct weekly variation ───────────────────
   const existingLoadCount = await loadRepo.count({
     where: weeks.map((w) => ({ weekId: w.id })),
   });
@@ -187,24 +238,33 @@ async function seed() {
     ];
 
     let loadNum = 1;
+    let weekTotals: { label: string; loads: number; gross: number; net: number }[] = [];
 
-    for (const week of weeks) {
+    for (let wi = 0; wi < weeks.length; wi++) {
+      const week = weeks[wi];
+      const profile = WEEKLY_PROFILES[wi];
+      let weekGross = 0;
+      let weekNet = 0;
+      let weekLoads = 0;
+
       for (const disp of dispatchers) {
-        const loadCount = 2 + Math.floor(Math.random() * 2);
+        const loadCount = Math.round(rand(profile.loadsPerDispatcher[0], profile.loadsPerDispatcher[1]));
 
         for (let i = 0; i < loadCount; i++) {
           const route = routes[(loadNum - 1) % routes.length];
           const brokerage = brokerages[(loadNum - 1) % brokerages.length];
           const driver = drivers[(loadNum - 1) % drivers.length];
           const unit = units[(loadNum - 1) % units.length];
-          const gross = 2000 + Math.round(Math.random() * 6000);
-          const driverCost = Math.round(gross * (0.5 + Math.random() * 0.2));
+
+          const gross = Math.round(rand(profile.grossRange[0], profile.grossRange[1]));
+          const driverCostPct = rand(profile.driverCostPct[0], profile.driverCostPct[1]);
+          const driverCost = Math.round(gross * driverCostPct);
           const profit = gross - driverCost;
           const profitPercent = gross > 0 ? Math.round((profit / gross) * 10000) / 100 : 0;
           const otr = Math.round(gross * 0.0125 * 100) / 100;
           const netProfit = Math.round((profit - otr) * 100) / 100;
 
-          const sylNumber = `TLS26-${week.isoWeek}-${String(loadNum).padStart(2, '0')}`;
+          const sylNumber = `TLS26-${String(week.isoWeek).padStart(2, '0')}-${String(loadNum).padStart(2, '0')}`;
           const dateOffset = Math.floor(Math.random() * 5);
           const loadDate = new Date(week.startDate);
           loadDate.setDate(loadDate.getDate() + dateOffset);
@@ -213,11 +273,10 @@ async function seed() {
           const toDateObj = new Date(dateStr);
           toDateObj.setDate(toDateObj.getDate() + 1 + Math.floor(Math.random() * 2));
 
-          // Vary payment flags realistically
-          const quickPay = loadNum % 5 === 0;
-          const directPay = loadNum % 7 === 0;
-          const factoring = loadNum % 4 === 0;
-          const driverPaid = loadNum % 3 === 0;
+          const quickPay = coinFlip(profile.quickPayRate);
+          const directPay = coinFlip(profile.directPayRate);
+          const factoring = coinFlip(profile.factoringRate);
+          const driverPaid = coinFlip(profile.driverPaidRate);
 
           await loadRepo.save(
             loadRepo.create({
@@ -254,11 +313,24 @@ async function seed() {
               comment: null,
             }),
           );
+
+          weekGross += gross;
+          weekNet += netProfit;
+          weekLoads++;
           loadNum++;
         }
       }
+
+      weekTotals.push({ label: week.label, loads: weekLoads, gross: weekGross, net: weekNet });
     }
-    console.log(`✅ ${loadNum - 1} loads created across ${weeks.length} weeks`);
+
+    console.log(`\n✅ ${loadNum - 1} loads created across ${weeks.length} weeks\n`);
+    console.log('Weekly breakdown:');
+    console.log('─'.repeat(60));
+    for (const wt of weekTotals) {
+      console.log(`  ${wt.label}: ${wt.loads} loads | Gross $${wt.gross.toLocaleString()} | Net $${wt.net.toLocaleString()}`);
+    }
+    console.log('─'.repeat(60));
   }
 
   // ── 7. Salary Rule Set ─────────────────────────────────────────
