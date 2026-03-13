@@ -2,6 +2,14 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
+import { User } from '../identity/entities/user.entity';
+import { Week } from '../week/entities/week.entity';
+import { Load } from '../load/entities/load.entity';
+import { SalaryRule } from '../salary-rule/entities/salary-rule.entity';
+import { Driver } from '../master-data/entities/driver.entity';
+import { Unit } from '../master-data/entities/unit.entity';
+import { Brokerage } from '../master-data/entities/brokerage.entity';
+import { SeedService } from './seed.service';
 
 @Module({
   imports: [
@@ -17,13 +25,14 @@ import { join } from 'path';
         autoLoadEntities: true,
         synchronize: false,
         migrations: [join(__dirname, 'migrations/*.{ts,js}')],
-        // DEV ONLY: auto-run pending migrations on app startup.
-        // For production, set to false and run migrations explicitly via CI/CD
-        // using: npm run migration:run -w packages/api
-        migrationsRun: config.get('NODE_ENV') !== 'production',
+        // Auto-run pending migrations on startup (both dev and prod)
+        migrationsRun: true,
         logging: config.get('NODE_ENV') === 'development',
       }),
     }),
+    // Register entities needed by SeedService
+    TypeOrmModule.forFeature([User, Week, Load, SalaryRule, Driver, Unit, Brokerage]),
   ],
+  providers: [SeedService],
 })
 export class DatabaseModule {}
